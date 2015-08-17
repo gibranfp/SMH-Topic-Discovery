@@ -34,10 +34,9 @@ random.seed()
 from collections import Counter
 punct=re.compile("[a-z']+")
 
-
-def line2words(line):
+def line2words(line,sws):
     return [w for w in punct.findall(line.lower()) 
-                if len(w)>0]
+                if len(w)>0 and not w in sws]
  
 
 if __name__ == "__main__":
@@ -54,9 +53,9 @@ if __name__ == "__main__":
     p.add_argument("--corpus",default="wiki",
             action="store", dest="corpus",
             help="Name for corpus file [wiki]")
-    p.add_argument("--odir",default=None,
+    p.add_argument("--odir",default='.',
             action="store", dest="odir",
-            help="Output dir for documents [None]")
+            help="Output dir for documents [.]")
     p.add_argument("--stop-words",default=None,metavar="FILE",
             action="store", dest="stopwords",
             help="stopwords file [None]")
@@ -78,7 +77,6 @@ if __name__ == "__main__":
     if not opts.random:
         random.seed(9111978)
 
-
     # prepara función de verbose
     if opts.verbose:
         def verbose(*args):
@@ -97,115 +95,121 @@ if __name__ == "__main__":
         sws=set(sws)
 
   
-
     # Extrayendo el vocabulario
     re_header = re.compile('^= ')
     corpus=Counter()
     doc=Counter()
     idx=[]
+    verbose("Extracting articles")
     for line in open(opts.WIKI):
         if re_header.match(line):
             if opts.max and len(idx)==opts.max:
                 break
+            if not len(idx)%1000:
+                print('.',end="")
             corpus.update(doc)
             doc= Counter()
-            idx.append(line[2:-2])
-            doc.update(line2words(line[2:-2]))
+            idx.append(line[2:-2].strip())
+            doc.update(line2words(line[2:-2].strip(),[]))
         else:
-            doc.update(line2words(line))
+            doc.update(line2words(line.strip(),sws))
     corpus.update(doc)
     
     verbose("Total number of documents",len(idx)) 
     verbose("Vocabulary size",len(corpus)) 
     verbose("Total number of words",sum(corpus.values())) 
 
+    files=[]
     # Creating splits
+    first_split=None
+    verbose("Creating splits")
     if len(opts.splits)>0:
         if not sum([float(y) for x,y in opts.splits ]) == 100.0:
             p.error("Split options defined but it does not adds to 100%")
         random.shuffle(idx)
-        splits={}
-        dist=[]
         splits=[]
         ini=0
+        first_split=opts.splits[0][0]
         for x,y in opts.splits:
             y=int(y)
-            splits.append(("."+x,idx[ini:ini+int(y*0.01*len(idx))]))
+            files.append(open(os.path.join(opts.odir,opts.corpus+"."+x+".corpus"),'w'))
+            splits.append(dict([ (title,(files[-1],x)) for title in idx[ini:ini+int(y*0.01*len(idx))]]))
             ini+=int(y*0.01*len(idx))
+        splits.append(dict([ (title,(files[-1],x)) for title in idx[ini:]]))
     else:
-        splits=[("",idx)]
+        files.append(open(os.path.join(opts.odir,opts.corpus+".corpus"),'w'))
+        first_split=""
+        splits=[dict([(title,(files[-1],"")) for title in idx])]
 
-    print(splits)
-    sys.exit()
-    cwords={}
-    cdocs={}
+    splits_={}
+    for split in splits:
+        splits_.update(split)
+    splits=splits_
 
-    voca={}
-    # Consolidating the results
-    for name in splitnames:
-        cwords[name]=Counter([])
-        cdocs[name]=Counter([])
-        for cws_,cds_ in mapres:
-            try:
-                cwords[name].update(cws_[name])
-                cdocs[name].update(cds_[name])
-            except KeyError:
-                pass
 
-        voca_=[(y,x) for (x,y) in enumerate([w for w,c in cwords[name].most_common() if
-          c>opts.cutoff])]
-        voca[name]=dict(voca_)
+    # Extracting voca first split
+    vocab=Counter()
+    header=None
+    ii=0
+    if len(opts.splits)<=1:
+        vocab=corpus
+    else:
+        for line in open(opts.WIKI):
 
-        # Saving voca
-        if opts.odir:
-            vocafile=open("{0}/{1}{2}.voca".format(opts.odir,opts.corpus,name),"w")
+            if re_header.match(line):
+                if opts.max and ii==opts.max:
+                    break
+
+                if not ii%1000:
+                    print('.',end="")
+ 
+                header=line[2:-2].strip()
+                if splits[header][1]==first_split:
+                    vocab.update(doc)
+                    doc.update(line2words(header,[]))
+                doc= Counter()
+                ii+=1
+            else:
+                if splits[header][1]==first_split:
+                    doc.update(line2words(line.strip(),sws))
+        if splits[header][1]==first_split:
+            vocab.update(doc)
+
+    verbose("Total number of words in vocab",sum(vocab.values()))
+    vocab=[(w,n) for (w,n) in vocab.most_common() if n>opts.cutoff ]
+    vocab_={}
+    for (i,(w,n)) in enumerate(vocab):
+        vocab_[w]=i
+
+
+
+    ii=0
+    header=None
+    verbose("Creating corpus")
+    for line in open(opts.WIKI):
+        if re_header.match(line):
+            if opts.max and ii==opts.max:
+                break
+            if not ii%1000:
+                print('.',end="")
+            if header:
+                info=["{0}:{1}".format(vocab_[w],n) for w,n in doc.most_common() if vocab_.has_key(w)] 
+                print(len(line)," ".join(info),file=splits[header][0])
+            doc= Counter()
+            ii+=1
+            header=line[2:-2].strip()
+            doc.update(line2words(header,[]))
         else:
-            vocafile=open("{0}{1}.voca".format(opts.corpus,name),"w")
+            doc.update(line2words(line.strip(),sws))
+    if header:
+        info=["{0}:{1}".format(vocab_[w],n) for w,n in doc.most_common() if vocab_.has_key(w)] 
+        print(len(line)," ".join(info),file=splits[header][0])
 
-
-        # Printing voca files
-        for word,id in voca_:
-            print >> vocafile, "{0} = {1} = {2} {3}".format(word,id,cwords[name][word],cdocs[name][word])
-        
-    if opts.odir:
-        pathcorpus="{0}/{1}".format(opts.odir,opts.corpus)
-    else:
-        pathcorpus="{0}".format(opts.corpus)
-
-        mapres=imap(docszip,[(n,x,voca[mainvoca],pathcorpus,sws,splits,splitnames) for n,x in enumerate(listing)])
-
-    
-    docs,zips=zip(*mapres)
-    docs_=sum(docs)
-    zips_=sum(zips)
-
-    for name in splitnames:
-        ucorpusfile="{0}{1}.corpus".format(pathcorpus,name)
-        with open(ucorpusfile, 'w') as outfile:
-            for n,x in enumerate(listing):
-                corpusfile="{0}{1}.corpus.{2}".format(pathcorpus,name,n)
-                with open(corpusfile) as infile:
-                    for line in infile:
-                        outfile.write(line)
-                os.remove(corpusfile)
-
-
-        uidxfile="{0}{1}.idx".format(pathcorpus,name)
-        with open(uidxfile, 'w') as outfile:
-            for n,x in enumerate(listing):
-                idxfile="{0}{1}.idx.{2}".format(pathcorpus,name,n)
-                with open(idxfile) as infile:
-                    for line in infile:
-                        outfile.write(line)
-                os.remove(idxfile)
-
-    
-    vocafile.close() 
-        
-
-        
-
-
-       
-        
+    for file in files:
+        file.close()
+    verbose("Creating vocabulary")
+    vocabf=open(os.path.join(opts.odir,opts.corpus+".vocab"),"w")
+    for w,n in vocab:
+        print("{0} {1}".format(w,n),file=vocabf)
+    vocabf.close()
 

@@ -194,7 +194,7 @@ if __name__ == "__main__":
                 print('.',end="")
             if header:
                 info=["{0}:{1}".format(vocab_[w],n) for w,n in doc.most_common() if vocab_.has_key(w)] 
-                print(len(line)," ".join(info),file=splits[header][0])
+                print(len(info)," ".join(info),file=splits[header][0])
             doc= Counter()
             ii+=1
             header=line[2:-2].strip()
@@ -203,7 +203,7 @@ if __name__ == "__main__":
             doc.update(line2words(line.strip(),sws))
     if header:
         info=["{0}:{1}".format(vocab_[w],n) for w,n in doc.most_common() if vocab_.has_key(w)] 
-        print(len(line)," ".join(info),file=splits[header][0])
+        print(len(info)," ".join(info),file=splits[header][0])
 
     for file in files:
         file.close()

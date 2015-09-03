@@ -20,10 +20,24 @@
 #ifndef TEXTIO_H
 #define TEXTIO_H
 
-#include "listdb.h"
+#include <smh/listdb.h>
 
-void textio_load_vocabulary(char *, char ***, uint **, uint **, uint **, uint *);
-void textio_print_idlist_as_words(List *, char **);
-void textio_print_idlistdb_as_words(ListDB *, char **);
-void textio_save_idlistdb_as_words(char *, ListDB *, char **);
+typedef struct TermInfo {
+     char *term;
+     uint id;
+     uint corpfreq;
+     uint docfreq;
+} TermInfo;
+
+typedef struct Vocabulary {
+     TermInfo *terms;
+     uint size;
+} Vocabulary;
+
+void textio_vocabulary_init(Vocabulary *);
+void textio_vocabulary_term_push(Vocabulary *, TermInfo);
+Vocabulary textio_load_vocabulary(char *);
+void textio_print_idlist_as_words(List *, Vocabulary *);
+void textio_print_idlistdb_as_words(ListDB *, Vocabulary *);
+void textio_save_idlistdb_as_words(char *, ListDB *, Vocabulary *);
 #endif

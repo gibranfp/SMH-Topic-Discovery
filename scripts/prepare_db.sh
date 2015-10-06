@@ -55,7 +55,7 @@ if $REUTERS; then
     read REUTERSV1PATH
     echo -n "Enter path of Reuters dataset English Vol 2: "
     read REUTERSV2PATH
-    python src/reuters/docs2tfdocs.py --split train 80 --split test 20 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH} ${REUTERSV2PATH}
+    python $ROOTPATH/python/reuters/docs2tfdocs.py --split train 80 --split test 20 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH} ${REUTERSV2PATH}
 fi
 
 if $TWENTYNG; then

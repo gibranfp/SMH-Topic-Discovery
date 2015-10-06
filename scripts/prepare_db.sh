@@ -45,7 +45,9 @@ done
 if $NIPS; then
     echo "Preparing NIPS corpus"
     mkdir -p $DATAPATH
+    echo "Downloading NIPS corpus"
     wget -qO- -O $DATAPATH/tmp.zip http://arbylon.net/projects/nips/nips-20110223.zip && unzip $DATAPATH/tmp.zip -d $DATAPATH/ && rm $DATAPATH/tmp.zip
+    echo "Done processing NIPS corpus"
 fi
 
 if $REUTERS; then
@@ -55,14 +57,17 @@ if $REUTERS; then
     read REUTERSV1PATH
     echo -n "Enter path of Reuters dataset English Vol 2: "
     read REUTERSV2PATH
-    python $ROOTPATH/python/reuters/docs2tfdocs.py --split train 80 --split test 20 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH} ${REUTERSV2PATH}
+     echo "Preprocessing and generating BOWs"
+    python src/reuters/docs2tfdocs.py --split train 80 --split test 20 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH} ${REUTERSV2PATH}
+    echo "Done processing Reuters corpus"
 fi
 
 if $TWENTYNG; then
     echo "Preparing 20 newsgroups corpus"
     mkdir -p $DATAPATH/20newsgroups
+    echo "Downloading, preprocessing and generating BOWs"
     python python/20newsgroups/20ng2corpus.py data/20newsgroups
-
+    echo "Done processing 20 newsgroups corpus"
 fi
 
 if $WIKI2TEXT; then
@@ -90,7 +95,13 @@ fi
 if $WIKIPEDIA; then
     echo "Preparing Wikipedia"    
     mkdir -p $DATAPATH/wikipedia
-    wget -qO- -O $DATAPATH//wikipedia/enwiki-20150702-pages-articles.xml.bz2 https://dumps.wikimedia.org/enwiki/20150702/enwiki-20150702-pages-articles.xml.bz2
-    bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 | ./$THIRDPARTYPATH/wiki2text > $DATAPATH/wikipedia/enwiki.txt
+    echo "Downloading Wikipedia dump"    
+    wget -qO- -O $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 https://dumps.wikimedia.org/enwiki/20150702/enwiki-20150702-pages-articles.xml.bz2
+    echo "Downloading stopwords"    
+    wget -qO- -O $DATAPATH/stopwords_english.txt https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
+    echo "Uncompressing and parsing Wikipedia dump"
+    bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 | ./$THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
+    echo "Genereting BOWs"
     python $ROOTPATH/python/wikipedia/wiki2corpus.py --WIKI $DATAPATH/wikipedia/enwiki.txt --split 80 20 --odir $DATAPATH/wikipedia/ --stop_words $ROOTPATH/data/stopwords_english.txt --cutoff 10 --corpus wiki
+    echo "Done processing Wikipedia corpus"
 fi

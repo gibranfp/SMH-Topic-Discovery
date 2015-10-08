@@ -21,8 +21,8 @@ if __name__ == "__main__":
     p.add_argument("-l","--number_tuples",default=[120],
                 action="append", dest="ls",type=int,
                 help="Number of tuples")
-    p.add_argument("--output",default=None,type=str,
-        action="store", dest='output',help="Filename to save mined model")
+    p.add_argument("--output_pref",default=None,type=str,
+        action="store", dest='outputpref',help="Prefix of output files")
     p.add_argument("--cutoff",default=None,type=int,
         action="store", dest='cutoff',help="Cutoff of topics [Off]")
     p.add_argument("--show",default=False,
@@ -63,6 +63,11 @@ if __name__ == "__main__":
         pl.title("r={0},l={1}".format(r,l))
         pl.show()
 
+        if opts.outputpref:
+            print "Saving resulting model to",opts.outputpref
+            m.save(opts.outputpref+"r_{0}_l_{1}.topics".format(r,l))
+
+
     # Draw boxplot sizes
     ax = pl.subplot(111)
     pl.boxplot([d for x,d in MASS])
@@ -71,10 +76,6 @@ if __name__ == "__main__":
     pl.ylim((0,ax.get_ylim()[1]))
     pl.show()
 
-    if opts.output:
-        print "Saving resulting model to",opts.output
-        smh.smh_save(opts.output)
-
-
+  
 
 

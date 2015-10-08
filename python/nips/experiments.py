@@ -7,9 +7,13 @@
 # 2015/IIMAS, México
 # ----------------------------------------------------------------------
 
+import sys
+sys.path.append('python')
 import numpy as np
 import pylab as pl
 from smh import smh
+from eval.coherence import coherence
+
 
 # MAIN program
 if __name__ == "__main__":
@@ -43,10 +47,10 @@ if __name__ == "__main__":
     pairs=zip(opts.rs,opts.ls)
     sorted(pairs)
 
-    MASS=[]
+    cs=[]
 
     for r,l in pairs:
-        print "Size tuples (r)",r,"Number of tuples (l)",l
+        print "Experiment tuples (r)",r,"Number of tuples (l)",l
         print "Mining topics..."
         m=s.mine(r,l)
         print "Size of original mined topics:",m.size()
@@ -54,14 +58,16 @@ if __name__ == "__main__":
             m.cutoff(min=opts.cutoff)
         print "Size of cutted off mined topics:",m.size()
 
-        # EVAL
-        lens=[t.size for t in m.ldb]
-        MASS.append(((r,l),lens))
+        # EVAL coherence
+        co=coherence(m,s)
+        cs.append(((r,l),[c for t,c in co]))
         
-        # GRAFICAR
-        h=pl.hist(lens)
-        pl.title("r={0},l={1}".format(r,l))
+        # Histograms of coherence
+        vals=[c for t,c in co]
+        h=pl.hist(vals)
+        pl.title("r={0},l={1} (Avg. {2})".format(r,l,sum(vals)/len(vals)))
         pl.show()
+        print "Average coherence:",sum(vals)/len(vals)
 
         if opts.outputpref:
             print "Saving resulting model to",opts.outputpref
@@ -70,10 +76,10 @@ if __name__ == "__main__":
 
     # Draw boxplot sizes
     ax = pl.subplot(111)
-    pl.boxplot([d for x,d in MASS])
-    pl.xticks(range(1,len(MASS)+1),["r={0},l={1}".format(x[0],x[1]) for x,d in
-        MASS],rotation="vertical")
-    pl.ylim((0,ax.get_ylim()[1]))
+    pl.boxplot([d for x,d in cs])
+    pl.xticks(range(1,len(cs)+1),["r={0},l={1}".format(x[0],x[1]) for x,d in
+        cs],rotation="vertical")
+    #pl.ylim((ax.get_ylim()[],0))
     pl.show()
 
   

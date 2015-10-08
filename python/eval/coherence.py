@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 # ----------------------------------------------------------------------
-# Coherence for topic dicovery calculation based on definition by
-#   Mimno, David, Wallach, Hanna, Talley, Edmund, Leen-
-#   ders, Miriam, and McCallum, Andrew. Optimizing se-
-#   mantic coherence in topic models. In EMNLP, 2011.
+# Coherence for topic dicovery calculation.
 # ----------------------------------------------------------------------
 # Ivan Vladimir Meza-Ruiz/ ivanvladimir at turing.iimas.unam.mx
 # 2015/IIMAS/UNAM

@@ -57,8 +57,8 @@ if $REUTERS; then
     read REUTERSV1PATH
     echo -n "Enter path of Reuters dataset English Vol 2: "
     read REUTERSV2PATH
-     echo "Preprocessing and generating BOWs"
-    python src/reuters/docs2tfdocs.py --split train 80 --split test 20 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH} ${REUTERSV2PATH}
+    echo "Preprocessing and generating BOWs"
+    python python/reuters/docs2tfdocs.py --split train 80 --split test 20 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH} ${REUTERSV2PATH}
     echo "Done processing Reuters corpus"
 fi
 
@@ -96,12 +96,12 @@ if $WIKIPEDIA; then
     echo "Preparing Wikipedia"    
     mkdir -p $DATAPATH/wikipedia
     echo "Downloading Wikipedia dump"    
-    wget -qO- -O $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 https://dumps.wikimedia.org/enwiki/20150702/enwiki-20150702-pages-articles.xml.bz2
+    #wget -qO- -O $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 https://dumps.wikimedia.org/enwiki/20150702/enwiki-20150702-pages-articles.xml.bz2
     echo "Downloading stopwords"    
     wget -qO- -O $DATAPATH/stopwords_english.txt https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
     echo "Uncompressing and parsing Wikipedia dump"
-    bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 | ./$THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
+    bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
     echo "Genereting BOWs"
-    python $ROOTPATH/python/wikipedia/wiki2corpus.py --WIKI $DATAPATH/wikipedia/enwiki.txt --split 80 20 --odir $DATAPATH/wikipedia/ --stop_words $ROOTPATH/data/stopwords_english.txt --cutoff 10 --corpus wiki
+    python $ROOTPATH/python/wikipedia/wiki2corpus.py WIKI $DATAPATH/wikipedia/enwiki.txt --split 80 20 --odir $DATAPATH/wikipedia/ --stop-words $ROOTPATH/data/stopwords_english.txt --cutoff 10 --corpus wiki
     echo "Done processing Wikipedia corpus"
 fi

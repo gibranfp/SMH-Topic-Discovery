@@ -13,7 +13,7 @@ import numpy as np
 import pylab as pl
 from smh import smh
 import math
-from eval.coherence import coherence
+from eval.coherence import coherence, utils
 
 def s2l(s,r):
     return int(math.log(0.5)/math.log(1-math.pow(s,r)))
@@ -52,6 +52,13 @@ if __name__ == "__main__":
     if len(opts.params)>1:
         opts.params.pop(0)
 
+    topic2corpus=None
+    if (opts.vcorpus and not opts.vtopics) or (not opts.vcorpus and opts.vtopics):
+        print "Both have to be given the vocabulary of the corpus an topics"
+        sys.exit(0)
+    else:
+        topic2corpus=utils.t2c(opts.vtopics,opts.vcorpus)
+
     print "Loading file ifs:",opts.ifs
     ifs=smh.smh_load(opts.ifs)
 
@@ -68,7 +75,7 @@ if __name__ == "__main__":
 
     for r,l,s in params:
         if s>0:
-            print "Experiment tuples (r)",r,"Number of tuples (l)",l,"S*",s
+            print "Experiment tuples (r)",r,", Number of tuples (l)",l,", S*",s
         else:
             print "Experiment tuples (r)",r,"Number of tuples (l)",l
         print "Mining topics..."
@@ -80,7 +87,7 @@ if __name__ == "__main__":
 
 
         # EVAL coherence
-        co=coherence(m,corpus)
+        co=coherence(m,corpus,topic2corpus)
         if opts.outputpref:
             print "Saving resulting model to",opts.outputpref
             m.save(opts.outputpref+"r_{0}_l_{1}.topics".format(r,l))

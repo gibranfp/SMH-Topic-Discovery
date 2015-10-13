@@ -15,6 +15,7 @@ import os
 import re
 import math
 from smh import smh
+import utils
 
 def coherence(topics, corpus,t2c=None,ntop=10,version="pmi"):
     results=[]
@@ -72,25 +73,12 @@ if __name__ == "__main__":
             action="store", dest="vcorpus",
             help="Vocabulary of corpus")
     
-
     opts = p.parse_args()
-
-    topic2corpus=None
-    if (opts.vcorpus and not opts.vtopics) or (not opts.vcorpus and opts.vtopics) :
-        print "Error if one vocabulary provided the other vocabulary must be provided"
+    if (opts.vcorpus and not opts.vtopics) or (not opts.vcorpus and opts.vtopics):
+        print "Both have to be given the vocabulary of the corpus an topics"
+        sys.exit(0)
     else:
-        if opts.vcorpus:
-            v_topics={}
-            for line in open(opts.vtopics):
-                line=line.strip().split()
-                v_topics[line[0]]=int(line[2])
-            topic2corpus={}
-            for line in open(opts.vcorpus):
-                line=line.strip().split()
-                try:
-                    topic2corpus[v_topics[line[0]]]=int(line[2])
-                except KeyError:
-                    pass
+        topic2corpus=utilss.t2c(opts.vtopics,opts.vcorpus)
 
     print "Loading ifs file:",opts.corpus
     corpus=smh.smh_load(opts.corpus)

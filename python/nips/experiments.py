@@ -31,8 +31,17 @@ if __name__ == "__main__":
         action="store", dest='cutoff',help="Cutoff of topics [Off]")
     p.add_argument("--show",default=False,
             action="store_true", dest='show',help="Show bases found")
+    p.add_argument("--voca-topics",default=False,
+            action="store", dest="vtopics",
+            help="Vocabulary of topics")
+    p.add_argument("--voca-corpus",default=False,
+            action="store", dest="vcorpus",
+            help="Vocabulary of corpus")
     p.add_argument("ifs",default=None,
         action="store", help="Inverted file structure of documents")
+    p.add_argument("corpus",default=None,
+        action="store", help="Inverted file structure of documents with term frequencies")
+
 
     opts = p.parse_args()
 
@@ -43,6 +52,9 @@ if __name__ == "__main__":
 
     print "Loading file ifs:",opts.ifs
     s=smh.smh_load(opts.ifs)
+
+    print "Loading file corpus:",opts.corpus
+    corpus=smh.smh_load(opts.corpus)
 
     pairs=zip(opts.rs,opts.ls)
     sorted(pairs)
@@ -59,7 +71,12 @@ if __name__ == "__main__":
         print "Size of cutted off mined topics:",m.size()
 
         # EVAL coherence
-        co=coherence(m,s)
+        co=coherence(m,corpus)
+        if opts.outputpref:
+            print "Saving resulting model to",opts.outputpref
+            m.save(opts.outputpref+"r_{0}_l_{1}.topics".format(r,l))
+        m.destroy()
+
         cs.append(((r,l),[c for t,c in co]))
         
         # Histograms of coherence
@@ -69,11 +86,7 @@ if __name__ == "__main__":
         pl.show()
         print "Average coherence:",sum(vals)/len(vals)
 
-        if opts.outputpref:
-            print "Saving resulting model to",opts.outputpref
-            m.save(opts.outputpref+"r_{0}_l_{1}.topics".format(r,l))
-
-
+      
     # Draw boxplot sizes
     ax = pl.subplot(111)
     pl.boxplot([d for x,d in cs])

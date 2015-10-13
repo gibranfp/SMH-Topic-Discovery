@@ -12,19 +12,23 @@ sys.path.append('python')
 import numpy as np
 import pylab as pl
 from smh import smh
+import math
 from eval.coherence import coherence
+
+def s2l(s,r):
+    return int(math.log(0.5)/math.log(1-math.pow(s,r)))
 
 
 # MAIN program
 if __name__ == "__main__":
     import argparse
     p = argparse.ArgumentParser("Mines")
-    p.add_argument("-r","--tuple_size",default=[3],
-                action="append", dest="rs",type=int,
-                help="Size of the tuple")
-    p.add_argument("-l","--number_tuples",default=[120],
-                action="append", dest="ls",type=int,
-                help="Number of tuples")
+    p.add_argument("-p","--params",default=[(3,120)],
+                action="append", dest="params",type=float,nargs=2,
+                help="(Size of the tuple, S*| number of tuples)")
+    p.add_argument("-l","--number_tuples",default=False,
+                action="store_true", dest="l",
+                help="Turn on second value op pair as parameter l, otherwise s*")
     p.add_argument("--output_pref",default=None,type=str,
         action="store", dest='outputpref',help="Prefix of output files")
     p.add_argument("--cutoff",default=None,type=int,
@@ -45,30 +49,35 @@ if __name__ == "__main__":
 
     opts = p.parse_args()
 
-    if len(opts.ls)>1:
-        opts.ls.pop(0)
-    if len(opts.rs)>1:
-        opts.rs.pop(0)
+    if len(opts.params)>1:
+        opts.params.pop(0)
 
     print "Loading file ifs:",opts.ifs
-    s=smh.smh_load(opts.ifs)
+    ifs=smh.smh_load(opts.ifs)
 
     print "Loading file corpus:",opts.corpus
     corpus=smh.smh_load(opts.corpus)
 
-    pairs=zip(opts.rs,opts.ls)
-    sorted(pairs)
+    if not opts.l:
+        params=[(int(r),s2l(s,r),s) for r,s in opts.params]
+    else:
+        params=[(int(r),int(l),0) for r,l in opts.params]
+    sorted(params)
 
     cs=[]
 
-    for r,l in pairs:
-        print "Experiment tuples (r)",r,"Number of tuples (l)",l
+    for r,l,s in params:
+        if s>0:
+            print "Experiment tuples (r)",r,"Number of tuples (l)",l,"S*",s
+        else:
+            print "Experiment tuples (r)",r,"Number of tuples (l)",l
         print "Mining topics..."
-        m=s.mine(r,l)
+        m=ifs.mine(r,l)
         print "Size of original mined topics:",m.size()
         if opts.cutoff:
             m.cutoff(min=opts.cutoff)
         print "Size of cutted off mined topics:",m.size()
+
 
         # EVAL coherence
         co=coherence(m,corpus)
@@ -82,7 +91,10 @@ if __name__ == "__main__":
         # Histograms of coherence
         vals=[c for t,c in co]
         h=pl.hist(vals)
-        pl.title("r={0},l={1} (Avg. {2})".format(r,l,sum(vals)/len(vals)))
+        if s>0:
+            pl.title("r={0},l={1},S*={2} (Avg. {3})".format(r,l,s,sum(vals)/len(vals)))
+        else:
+            pl.title("r={0},l={1} (Avg. {2})".format(r,l,sum(vals)/len(vals)))
         pl.show()
         print "Average coherence:",sum(vals)/len(vals)
 

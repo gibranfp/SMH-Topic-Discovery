@@ -59,7 +59,7 @@ def save_vocabulary_to_file(filename, corpus_list, corpus_counter):
             docfreq[id] += 1
             corpfreq[id] += freq
 
-    ids, corpfreq, docfreq, words = zip(*sorted(zip(ids, corpfreq, docfreq, words)))
+    corpfreq, ids, docfreq, words = zip(*sorted(zip(corpfreq, ids,  docfreq, words), reverse=True))
     with open(filename, 'w') as f:
         for i in range(len(words)):
             line = words[i] + ' = ' + str(ids[i]) + ' = ' + str(corpfreq[i])  + ' ' + str(docfreq[i]) + '\n'

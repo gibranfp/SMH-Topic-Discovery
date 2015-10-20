@@ -9,7 +9,7 @@
 #
 # System libraries
 def t2c(vtopics,vcorpus):
-    '''Returns a map between vocbulary'''
+    '''Returns a map between vocabulary'''
     topic2corpus=None
     v_topics={}
     for line in open(vtopics):
@@ -23,4 +23,12 @@ def t2c(vtopics,vcorpus):
         except KeyError:
             pass
     return topic2corpus
+
+def i2v(v):
+    '''Returns vocabulary'''
+    v_={}
+    for line in open(v):
+        line=line.strip().split()
+        v_[int(line[2])]=line[0]
+    return v_
 

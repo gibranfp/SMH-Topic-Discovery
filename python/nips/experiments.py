@@ -50,6 +50,12 @@ if __name__ == "__main__":
     p.add_argument("--voca-corpus",default=False,
             action="store", dest="vcorpus",
             help="Vocabulary of corpus")
+    p.add_argument("--expand",default=None,
+            action="store", dest="expand",
+            help="TF ifs file")
+    p.add_argument("--weights",default=None,
+            action="store", dest="weights",
+            help="Weights file")
     p.add_argument("ifs",default=None,
         action="store", help="Inverted file structure of documents")
     p.add_argument("corpus",default=None,
@@ -79,6 +85,16 @@ if __name__ == "__main__":
     print "Loading testing corpus:",opts.corpus
     corpus=smh.smh_load(opts.corpus)
 
+    weights=None
+    if opts.weights:
+        print "Loading weights:",opts.weights
+        weights=smh.Weights(opts.weights)
+
+    expand=None
+    if opts.expand:
+        print "Loading corpus for expansion:",opts.expand
+        expand=smh.smh_load(opts.expand)
+
     if not opts.l:
         params=[(int(r),s2l(s,r),s) for r,s in opts.params]
     else:
@@ -94,7 +110,7 @@ if __name__ == "__main__":
             print "Experiment tuples (r) {0}, Number of tuples (l) {1}".format(r,l)
         print "Mining topics..."
         start = time.clock()
-        m=ifs.mine(r,l)
+        m=ifs.mine(r,l,weights=weights,expand=expand)
         final = time.clock() - start
         total = final
         print "Size of original mined topics:",m.size()
@@ -127,11 +143,13 @@ if __name__ == "__main__":
             print "Saving resulting model to",opts.outputpref
             m.save(opts.outputpref+"r_{0}_l_{1}.topics".format(r,l))
         
-
-        cs.append(((r,l),[c for t,c in co]))
+        co=[(c,t) for t,c in co ]
+        co.sort()
+        co.reverse()
+        cs.append(((r,l),co))
         
         # Histograms of coherence
-        vals=[c for t,c in co]
+        vals=[c for c,t in co]
         h=pl.hist(vals)
         if s>0:
             pl.title("r={0},l={1},S*={2} (Avg. {3})".format(r,l,s,sum(vals)/len(vals)))
@@ -143,13 +161,13 @@ if __name__ == "__main__":
         pl.savefig(fn)
         if opts.vtopics:
             print "First 10 topics (higher coherence)"
-            for t,c in co[:10]:
+            for c,t in co[:10]:
                 t=m.ldb[t]
                 ws=[voca[w.item] for w in t]
                 print c,", ".join(ws)
             if len(co)>10:
                 print "Last 10 topics (lowest coherence)"
-                for t,c in co[-10:]:
+                for c,t in co[-10:]:
                     t=m.ldb[t]
                     ws=[voca[w.item] for w in t]
                     print c,", ".join(ws)

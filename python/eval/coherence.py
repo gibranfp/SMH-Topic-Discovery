@@ -48,7 +48,7 @@ def coherence(topics, corpus,t2c=None,ntop=10,version="pmi"):
                     p_j=smh.sa.list_sum_freq(docs_j)
                     p_ij=smh.sa.list_sum_freq(docs_ij)
                     if p_ij > 0:
-                        coherence+=math.log(float(p_ij)/float(p_i*p_j),10)
+                        coherence+=-1.0*math.log(float(p_ij)/float(p_i*p_j),10)
         results.append((itopic,coherence/sum(range(ntop))))
     return results
 

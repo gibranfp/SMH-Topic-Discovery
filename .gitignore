@@ -44,3 +44,4 @@ report.rst
 *.swp
 Makefile
 .clang_complete
+fig/

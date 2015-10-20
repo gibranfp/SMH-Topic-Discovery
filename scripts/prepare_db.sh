@@ -65,8 +65,10 @@ fi
 if $TWENTYNG; then
     echo "Preparing 20 newsgroups corpus"
     mkdir -p $DATAPATH/20newsgroups
+    echo "Downloading vocabulary"
+    wget -qO- -O $DATAPATH/20newsgroups/vocabulary.txt http://qwone.com/~jason/20Newsgroups/vocabulary.txt
     echo "Downloading, preprocessing and generating BOWs"
-    python python/20newsgroups/20ng2corpus.py data/20newsgroups
+    python python/20newsgroups/20ng2corpus.py data/20newsgroups $DATAPATH/20newsgroups/vocabulary.txt
     echo "Done processing 20 newsgroups corpus"
 fi
 

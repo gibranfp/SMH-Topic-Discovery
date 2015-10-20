@@ -33,8 +33,11 @@ if __name__ == "__main__":
         action="store", dest='outputpref',help="Prefix of output files")
     p.add_argument("--cutoff",default=None,type=int,
         action="store", dest='cutoff',help="Cutoff of topics [Off]")
-    p.add_argument("--show",default=False,
-            action="store_true", dest='show',help="Show bases found")
+    p.add_argument("--clus",default=False,
+        action="store_true", dest='clus',help="Cluster topics [Off]")
+    p.add_argument("--thres",default=0.7,
+            action="store", dest='thres',
+            help="Threshold for clustering")
     p.add_argument("--voca-topics",default=False,
             action="store", dest="vtopics",
             help="Vocabulary of topics")
@@ -57,12 +60,13 @@ if __name__ == "__main__":
         print "Both have to be given the vocabulary of the corpus an topics"
         sys.exit(0)
     else:
-        topic2corpus=utils.t2c(opts.vtopics,opts.vcorpus)
+        if opts.vcorpus:
+            topic2corpus=utils.t2c(opts.vtopics,opts.vcorpus)
 
     print "Loading file ifs:",opts.ifs
     ifs=smh.smh_load(opts.ifs)
 
-    print "Loading file corpus:",opts.corpus
+    print "Loading testing corpus:",opts.corpus
     corpus=smh.smh_load(opts.corpus)
 
     if not opts.l:
@@ -83,15 +87,17 @@ if __name__ == "__main__":
         print "Size of original mined topics:",m.size()
         if opts.cutoff:
             m.cutoff(min=opts.cutoff)
-        print "Size of cutted off mined topics:",m.size()
-
+            print "Size of cutted off mined topics:",m.size()
+        if opts.clus:
+            c=m.cluster_mhlink(3,255,thres=opts.thres)
+            print "Size of clustered topics:",c.size()
+            m=c
 
         # EVAL coherence
         co=coherence(m,corpus,topic2corpus)
         if opts.outputpref:
             print "Saving resulting model to",opts.outputpref
             m.save(opts.outputpref+"r_{0}_l_{1}.topics".format(r,l))
-        m.destroy()
 
         cs.append(((r,l),[c for t,c in co]))
         

@@ -21,6 +21,8 @@ def coherence(topics, corpus,t2c=None,ntop=10,version="pmi"):
     results=[]
     for itopic,topic in enumerate(topics.ldb):
         coherence=0.0
+        if topic.size == 0:
+            continue
         ntop=min(ntop,topic.size)
         for i in range(ntop):
             item_i=topic[i].item
@@ -49,7 +51,8 @@ def coherence(topics, corpus,t2c=None,ntop=10,version="pmi"):
                     p_ij=smh.sa.list_sum_freq(docs_ij)
                     if p_ij > 0:
                         coherence+=-1.0*math.log(float(p_ij)/float(p_i*p_j),10)
-        results.append((itopic,coherence/sum(range(ntop))))
+        if coherence>0:
+            results.append((itopic,coherence/sum(range(ntop))))
     return results
 
 

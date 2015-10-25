@@ -141,7 +141,7 @@ if __name__ == "__main__":
                 from sklearn.cluster import MiniBatchKMeans
                 print "Using minibatch k-means"
                 start = time.clock()
-                minibatchkmeans = MiniBatchKMeans(init='k-means++',n_clusters=200)
+                minibatchkmeans = MiniBatchKMeans(init='k-means++',n_clusters=30)
                 c=m.cluster_sklearn(minibatchkmeans)
             elif opts.clus_method=='dbscan':
                 from sklearn.cluster import DBSCAN

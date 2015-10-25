@@ -209,7 +209,7 @@ if __name__ == "__main__":
         file.close()
     verbose("Creating vocabulary")
     vocabf=open(os.path.join(opts.odir,opts.corpus+".vocab"),"w")
-    for w,n in vocab:
-        print("{0} {1}".format(w,n),file=vocabf)
+    for i,(w,n) in enumerate(vocab):
+        print("{0} = {1} = {2}".format(w,i,n),file=vocabf)
     vocabf.close()
 

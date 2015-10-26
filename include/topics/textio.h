@@ -35,8 +35,10 @@ typedef struct Vocabulary {
 } Vocabulary;
 
 void textio_vocabulary_init(Vocabulary *);
-void textio_vocabulary_term_push(Vocabulary *, TermInfo);
-Vocabulary textio_load_vocabulary(char *);
+void textio_vocabulary_print(Vocabulary *);
+void textio_vocabulary_push(Vocabulary *, TermInfo);
+Vocabulary textio_vocabulary_load_from_file(char *);
+void textio_vocabulary_save_to_file(char *, Vocabulary *);
 void textio_print_idlist_as_words(List *, Vocabulary *);
 void textio_print_idlistdb_as_words(ListDB *, Vocabulary *);
 void textio_save_idlistdb_as_words(char *, ListDB *, Vocabulary *);

@@ -119,6 +119,7 @@ if __name__ == "__main__":
             print "Cutting off topics..."
             start = time.clock()
             m.cutoff(min=opts.cutoff)
+            m.save("test.txt")
             final = time.clock() - start
             total+=final
             print "Size of cutted off mined topics:",m.size()

@@ -14,6 +14,23 @@ void textio_vocabulary_init(Vocabulary *vocabulary)
      vocabulary->terms = NULL;
 }
 
+/**
+ * @brief Prints a vocabulary structure
+ *
+ * @param vocabulary Vocabulary to be initialized
+ */
+void textio_vocabulary_print(Vocabulary *vocabulary)
+{
+     uint i;
+     for (i = 0; i < vocabulary->size; i++) {
+          printf("%s = %u = %u %u\n",
+                 vocabulary->terms[i].term,
+                 vocabulary->terms[i].id,
+                 vocabulary->terms[i].corpfreq,
+                 vocabulary->terms[i].docfreq);
+     }
+}
+
 
 /**
  * @brief Adds a new term to the end of a vocabulary
@@ -21,7 +38,7 @@ void textio_vocabulary_init(Vocabulary *vocabulary)
  * @param vocabulary Vocabulary where the term will be added
  * @param term Term to be added
  */
-void textio_vocabulary_term_push(Vocabulary *vocabulary, TermInfo term)
+void textio_vocabulary_push(Vocabulary *vocabulary, TermInfo term)
 {
      uint newsize = vocabulary->size + 1;
 
@@ -42,11 +59,11 @@ void textio_vocabulary_term_push(Vocabulary *vocabulary, TermInfo term)
  * @param docfreq Number of documents where the term appears
  * @param vocsize Number of terms in the vocabulary
  */
-Vocabulary textio_load_vocabulary(char *filename)
+Vocabulary textio_vocabulary_load_from_file(char *filename)
 {
-     FILE *fp;
-     fp = fopen(filename, "r");
-     if (fp == NULL){
+     FILE *file;
+     file = fopen(filename, "r");
+     if (file == NULL){
           fprintf(stderr,"Could not open file %s\n", filename);
           exit(EXIT_FAILURE);
      }
@@ -57,7 +74,7 @@ Vocabulary textio_load_vocabulary(char *filename)
      ssize_t read;
      Vocabulary vocabulary;
      textio_vocabulary_init(&vocabulary);
-     while ((read = getline(&line, &len, fp)) != -1){
+     while ((read = getline(&line, &len, file)) != -1){
           // term
           token = strtok (line, " = ");
           TermInfo terminfo;
@@ -80,9 +97,44 @@ Vocabulary textio_load_vocabulary(char *filename)
      }
    
      free(line);
-     fclose(fp);
+
+     if (fclose(file)) {
+          fprintf(stderr,"Error: Could not close file %s\n", filename);
+          exit(EXIT_FAILURE);
+     }
 
      return vocabulary;
+}
+
+/**
+ * @brief Saves a vocabulary in the following format:
+ *             term1 = id1 = termfreq1 termdocfreq1
+ *                        ...
+ *
+ * @param filename Name of the file where the vocabulary is to be saved
+ * @param vocab Vocabulary
+ */
+void textio_vocabulary_save_to_file(char *filename, Vocabulary *vocabulary)
+{
+     FILE *file;     
+     if (!(file = fopen(filename,"w"))) {
+          fprintf(stderr,"Error: Could not create file %s\n", filename);
+          exit(EXIT_FAILURE);
+     }
+
+     uint i;
+     for (i = 0; i < vocabulary->size; i++) {
+          fprintf(file, "%s = %u = %u %u\n",
+                  vocabulary->terms[i].term,
+                  vocabulary->terms[i].id,
+                  vocabulary->terms[i].corpfreq,
+                  vocabulary->terms[i].docfreq);
+     }
+
+     if (fclose(file)) {
+          fprintf(stderr,"Error: Could not close file %s\n", filename);
+          exit(EXIT_FAILURE);
+     }
 }
 
 /**

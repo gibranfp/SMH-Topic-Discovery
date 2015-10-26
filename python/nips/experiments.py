@@ -41,7 +41,10 @@ if __name__ == "__main__":
         action="store", dest='cutoff',help="Cutoff of topics [Off]")
     p.add_argument("--clus",default=False,
         action="store_true", dest='clus',help="Cluster topics [Off]")
-    p.add_argument("--thres",default=0.7,
+    p.add_argument("--clus_method",default=False,
+        action="store", dest='clus_method',help="Cluster method [kmeans, ]")
+ 
+    p.add_argument("--thres",default=0.7,type=float,
             action="store", dest='thres',
             help="Threshold for clustering")
     p.add_argument("--voca-topics",default=False,
@@ -126,8 +129,36 @@ if __name__ == "__main__":
             print "Cutting off time:",final
         if opts.clus:
             print "Clustering topics..."
-            start = time.clock()
-            c=m.cluster_mhlink(3,255,thres=opts.thres)
+            if not opts.clus_method or opts.clus_method=='default':
+                start = time.clock()
+                c=m.cluster_mhlink(thres=opts.thres)
+            elif opts.clus_method=='kmeans':
+                from sklearn.cluster import KMeans
+                print "Using k-means"
+                start = time.clock()
+                kmeans = KMeans(init='k-means++', n_clusters=100,n_init=10)
+                c=m.cluster_sklearn(kmeans)
+            elif opts.clus_method=='minibatch':
+                from sklearn.cluster import MiniBatchKMeans
+                print "Using minibatch k-means"
+                start = time.clock()
+                minibatchkmeans = MiniBatchKMeans(init='k-means++',n_clusters=30)
+                c=m.cluster_sklearn(minibatchkmeans)
+            elif opts.clus_method=='dbscan':
+                from sklearn.cluster import DBSCAN
+                print "Using DBSCAN"
+                start = time.clock()
+                dbscan = DBSCAN(eps=opts.thres)
+                c=m.cluster_sklearn(dbscan)
+                c.cutoff(min=2)
+            elif opts.clus_method=='spectral':
+                from sklearn.cluster import SpectralClustering
+                print "Using spectral"
+                start = time.clock()
+                spectral = SpectralClustering(n_clusters=100,eigen_solver="arpack")
+                c=m.cluster_sklearn(spectral)
+
+
             final = time.clock() - start
             total+=final
             print "Size of clustered topics:",c.size()
@@ -159,6 +190,7 @@ if __name__ == "__main__":
             pl.title("r={0},l={1} (Avg. {2})".format(r,l,sum(vals)/len(vals)))
             fn="{0}/hist_{1}_{2}_{3}.png".format(opts.figdir,r,l,timestr)
         print "Saving fig",fn
+        print "======"
         pl.savefig(fn)
         if opts.vtopics:
             print "First 10 topics (higher coherence)"
@@ -173,6 +205,7 @@ if __name__ == "__main__":
                     ws=[voca[w.item] for w in t]
                     print c,", ".join(ws)
             print "Total tópicos", len(co)
+        print "======"
         print "Total amount of time:",total
         print "Average coherence:",sum(vals)/len(vals)
 

@@ -102,6 +102,6 @@ if $WIKIPEDIA; then
     echo "Uncompressing and parsing Wikipedia dump"
     bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
     echo "Genereting BOWs"
-    python $ROOTPATH/python/wikipedia/wiki2corpus.py WIKI $DATAPATH/wikipedia/enwiki.txt --split 80 20 --odir $DATAPATH/wikipedia/ --stop-words $ROOTPATH/data/stopwords_english.txt --cutoff 10 --corpus wiki
+    python $ROOTPATH/python/wikipedia/wiki2corpus.py $DATAPATH/wikipedia/enwiki.txt --split 80 --split 20 --odir $DATAPATH/wikipedia/ --stop-words $ROOTPATH/data/stopwords_english.txt --cutoff 10 --corpus wiki
     echo "Done processing Wikipedia corpus"
 fi

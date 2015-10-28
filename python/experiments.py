@@ -33,17 +33,22 @@ if __name__ == "__main__":
     p.add_argument("-l","--number_tuples",default=False,
                 action="store_true", dest="l",
                 help="Turn on second value op pair as parameter l, otherwise s*")
-    p.add_argument("--figdir",default="fig",type=str,
-        action="store", dest='figdir',help="Output figures directory")
-    p.add_argument("--output_pref",default=None,type=str,
-        action="store", dest='outputpref',help="Prefix of output files")
+    p.add_argument("--fig_pref",default=None,type=str,
+        action="store", dest='fig_pref',help="Prefix for figures ")
+    p.add_argument("--model_pref",default=None,type=str,
+        action="store", dest='model_pref',help="Prefix of output files")
+    p.add_argument("--topics_pref",default=None,type=str,
+        action="store", dest='topics_pref',help="Prefix for topics as a text")
     p.add_argument("--cutoff",default=None,type=int,
         action="store", dest='cutoff',help="Cutoff of topics [Off]")
     p.add_argument("--clus",default=False,
         action="store_true", dest='clus',help="Cluster topics [Off]")
     p.add_argument("--clus_method",default=False,
         action="store", dest='clus_method',help="Cluster method [kmeans, ]")
- 
+    p.add_argument("--nclus",default=100,type=int,
+        action="store", dest='nclus',help="Number of cluster if apply [100]")
+    p.add_argument("--min_cluster_size",default=3,type=int,
+            action="store", dest='min_cluster_size',help="Minimum size of cluster for default clustering[3]")
     p.add_argument("--thres",default=0.7,type=float,
             action="store", dest='thres',
             help="Threshold for clustering")
@@ -61,8 +66,11 @@ if __name__ == "__main__":
             help="Weights file")
     p.add_argument("ifs",default=None,
         action="store", help="Inverted file structure of documents")
-    p.add_argument("corpus",default=None,
-        action="store", help="Inverted file structure of documents with term frequencies")
+    p.add_argument("train_corpus",default=None,
+        action="store", help="Inverted file structure of documents with term frequencies for coherence filtering")
+    p.add_argument("test_corpus",default=None,
+        action="store", help="Inverted file structure of documents with term frequencies for coherence evaluation")
+
 
 
     opts = p.parse_args()
@@ -85,9 +93,6 @@ if __name__ == "__main__":
     print "Loading file ifs:",opts.ifs
     ifs=smh.smh_load(opts.ifs)
 
-    print "Loading testing corpus:",opts.corpus
-    corpus=smh.smh_load(opts.corpus)
-
     weights=None
     if opts.weights:
         print "Loading weights:",opts.weights
@@ -105,6 +110,13 @@ if __name__ == "__main__":
     sorted(params)
 
     cs=[]
+
+    # Filter wiht coherence
+    print "Loading coherence filtering corpus:",opts.train_corpus
+    corpus_train=smh.smh_load(opts.train_corpus)
+
+    print "Loading coherence for testing:",opts.test_corpus
+    corpus_test=smh.smh_load(opts.test_corpus)
 
     for r,l,s in params:
         if s>0:
@@ -131,31 +143,24 @@ if __name__ == "__main__":
             print "Clustering topics..."
             if not opts.clus_method or opts.clus_method=='default':
                 start = time.clock()
-                c=m.cluster_mhlink(thres=opts.thres)
+                c=m.cluster_mhlink(thres=opts.thres,min_cluster_size=opts.min_cluster_size)
             elif opts.clus_method=='kmeans':
                 from sklearn.cluster import KMeans
                 print "Using k-means"
                 start = time.clock()
-                kmeans = KMeans(init='k-means++', n_clusters=100,n_init=10)
+                kmeans = KMeans(init='k-means++', n_clusters=opts.nclus,n_init=10)
                 c=m.cluster_sklearn(kmeans)
             elif opts.clus_method=='minibatch':
                 from sklearn.cluster import MiniBatchKMeans
                 print "Using minibatch k-means"
                 start = time.clock()
-                minibatchkmeans = MiniBatchKMeans(init='k-means++',n_clusters=30)
+                minibatchkmeans =MiniBatchKMeans(init='k-means++',n_clusters=opts.nclus)
                 c=m.cluster_sklearn(minibatchkmeans)
-            elif opts.clus_method=='dbscan':
-                from sklearn.cluster import DBSCAN
-                print "Using DBSCAN"
-                start = time.clock()
-                dbscan = DBSCAN(eps=opts.thres)
-                c=m.cluster_sklearn(dbscan)
-                c.cutoff(min=2)
             elif opts.clus_method=='spectral':
                 from sklearn.cluster import SpectralClustering
                 print "Using spectral"
                 start = time.clock()
-                spectral = SpectralClustering(n_clusters=100,eigen_solver="arpack")
+                spectral = SpectralClustering(n_clusters=opts.nclus,eigen_solver="arpack")
                 c=m.cluster_sklearn(spectral)
 
 
@@ -169,60 +174,80 @@ if __name__ == "__main__":
                 print "No topics clustered"
                 continue
 
-        # EVAL coherence
-        co=coherence(m,corpus,topic2corpus)
-        if opts.outputpref:
-            print "Saving resulting model to",opts.outputpref
-            m.save(opts.outputpref+"r_{0}_l_{1}.topics".format(r,l))
-        
+        # Filter wiht coherence
+        print "Filtering by coherence..."
+        m_,co=coherence(m,corpus_train,None,min_coherence=0.0)
+
+        print "Calculating coherence..."
+        tmp_,co=coherence(m_,corpus_test,topic2corpus)
         co=[(c,t) for t,c in co ]
         co.sort()
         co.reverse()
         cs.append(((r,l),co))
+      
+        if opts.model_pref:
+            filename=opts.model_pref+"r_{0}_l_{1}.topics".format(r,l)
+            print "Saving resulting model to",filename
+            m_.save(filename)
         
+
         # Histograms of coherence
         vals=[c for c,t in co]
-        h=pl.hist(vals)
-        if s>0:
-            pl.title("r={0},l={1},S*={2} (Avg. {3})".format(r,l,s,sum(vals)/len(vals)))
-            fn="{0}/hist_{1}_{2}_{3}_{4}.png".format(opts.figdir,r,l,s,timestr)
-        else:
-            pl.title("r={0},l={1} (Avg. {2})".format(r,l,sum(vals)/len(vals)))
-            fn="{0}/hist_{1}_{2}_{3}.png".format(opts.figdir,r,l,timestr)
-        print "Saving fig",fn
-        print "======"
-        pl.savefig(fn)
+        if opts.fig_pref:
+            h=pl.hist(vals)
+            if s>0:
+                pl.title("r={0},l={1},S*={2} (Avg. {3})".format(r,l,s,sum(vals)/len(vals)))
+                fn=opts.fig_pref+"_{0}_{1}_{2}.pdf".format(r,l,s)
+            else:
+                pl.title("r={0},l={1} (Avg. {2})".format(r,l,sum(vals)/len(vals)))
+                fn=opts.fig_pref+"_{0}_{1}}.pdf".format(r,l)
+            print "Saving fig",fn
+            pl.savefig(fn,format='PDF')
+            pl.clf()
         if opts.vtopics:
+            print "======"
             print "First 10 topics (higher coherence)"
             for c,t in co[:10]:
-                t=m.ldb[t]
+                t=m_.ldb[t]
                 ws=[voca[w.item] for w in t]
                 print c,", ".join(ws)
             if len(co)>10:
                 print "Last 10 topics (lowest coherence)"
                 for c,t in co[-10:]:
-                    t=m.ldb[t]
+                    t=m_.ldb[t]
                     ws=[voca[w.item] for w in t]
                     print c,", ".join(ws)
-            print "Total tópicos", len(co)
+        if opts.topics_pref:
+            filename=opts.topics_pref+"r_{0}_l_{1}.topics".format(r,l)
+            print "Saving topics to",filename
+            with open(filename ,'w') as ft:
+                print "Total tópicos", len(co)
+                for c,t in co[:10]:
+                    t=m_.ldb[t]
+                    ws=[voca[w.item] for w in t]
+                    print >> ft,c,", ".join(ws)
+        
         print "======"
         print "Total amount of time:",total
         print "Average coherence:",sum(vals)/len(vals)
-
-
+        print "Total of topics:",m_.size()
 
     if len(cs)==0:
         print "NO TOPICS FOUND"
     else:
         # Draw boxplot sizes
-        ax = pl.subplot(111)
-        pl.boxplot([d for x,d in cs])
-        pl.xticks(range(1,len(cs)+1),["r={0},l={1}".format(x[0],x[1]) for x,d in
-            cs],rotation="vertical")
-        #pl.ylim((ax.get_ylim()[],0))
-        fn="{0}/boxplot_{1}.png".format(opts.figdir,timestr)
-        print "Saving fig",fn
-        pl.savefig(fn)
+        if opts.fig_pref:
+            ax=pl.figure(figsize=(6, 8))
+            vals=[[co for co,i in  d] for x,d in cs]
+            pl.boxplot(vals)
+            pl.xticks(range(1,len(cs)+1),["r={0},l={1}".format(x[0],x[1]) for x,d in
+                cs],rotation="vertical")
+            #pl.ylim((ax.get_ylim()[],0))
+            fn=opts.fig_pref+"boxplot.pdf"
+            print "Saving fig",fn
+            pl.tight_layout()
+            pl.savefig(fn,format='PDF')
+            pl.clf()
 
   
 

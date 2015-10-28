@@ -17,8 +17,9 @@ import math
 from smh import smh
 import utils
 
-def coherence(topics, corpus,t2c=None,ntop=10,version="pmi"):
+def coherence(topics, corpus,t2c=None,ntop=10,version="pmi",min_coherence=0.0):
     results=[]
+    smh_=smh.SMH(size=topics.ldb.size,dim=topics.ldb.dim)
     for itopic,topic in enumerate(topics.ldb):
         coherence=0.0
         if topic.size == 0:
@@ -51,9 +52,10 @@ def coherence(topics, corpus,t2c=None,ntop=10,version="pmi"):
                     p_ij=smh.sa.list_sum_freq(docs_ij)
                     if p_ij > 0:
                         coherence+=-1.0*math.log(float(p_ij)/float(p_i*p_j),10)
-        if coherence>0:
+        if coherence>min_coherence:
             results.append((itopic,coherence/sum(range(ntop))))
-    return results
+            smh_.push(topic)
+    return smh_,results
 
 
 

@@ -55,18 +55,20 @@ if $REUTERS; then
     mkdir -p $DATAPATH/reuters
     echo -n "Enter path of Reuters dataset English Vol 1: "
     read REUTERSV1PATH
-    echo -n "Enter path of Reuters dataset English Vol 2: "
-    read REUTERSV2PATH
+    #echo -n "Enter path of Reuters dataset English Vol 2: "
+    #read REUTERSV2PATH
     echo "Preprocessing and generating BOWs"
-    python python/reuters/docs2tfdocs.py --split train 80 --split test 20 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH} ${REUTERSV2PATH}
+    python python/reuters/docs2tfdocs.py --split train 100 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH}
     echo "Done processing Reuters corpus"
 fi
 
 if $TWENTYNG; then
     echo "Preparing 20 newsgroups corpus"
     mkdir -p $DATAPATH/20newsgroups
+    echo "Downloading vocabulary"
+    wget -qO- -O $DATAPATH/20newsgroups/vocabulary.txt http://qwone.com/~jason/20Newsgroups/vocabulary.txt
     echo "Downloading, preprocessing and generating BOWs"
-    python python/20newsgroups/20ng2corpus.py data/20newsgroups
+    python python/20newsgroups/20ng2corpus.py data/20newsgroups $DATAPATH/20newsgroups/vocabulary.txt
     echo "Done processing 20 newsgroups corpus"
 fi
 
@@ -102,6 +104,6 @@ if $WIKIPEDIA; then
     echo "Uncompressing and parsing Wikipedia dump"
     bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
     echo "Genereting BOWs"
-    python $ROOTPATH/python/wikipedia/wiki2corpus.py $DATAPATH/wikipedia/enwiki.txt --split 80 --split 20 --odir $DATAPATH/wikipedia/ --stop-words $ROOTPATH/data/stopwords_english.txt --cutoff 10 --corpus wiki
+    python $ROOTPATH/python/wikipedia/wiki2corpus.py $DATAPATH/wikipedia/enwiki.txt --split train 80 --split test 20 --odir $DATAPATH/wikipedia/ --stop-words $ROOTPATH/data/stopwords_english.txt --cutoff 10 --corpus wiki
     echo "Done processing Wikipedia corpus"
 fi

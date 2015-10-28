@@ -59,7 +59,7 @@ def save_vocabulary_to_file(filename, corpus_list, corpus_counter):
             docfreq[id] += 1
             corpfreq[id] += freq
 
-    ids, corpfreq, docfreq, words = zip(*sorted(zip(ids, corpfreq, docfreq, words)))
+    ids, corpfreq, docfreq, words = zip(*sorted(zip(ids, corpfreq, docfreq, words), reverse=True))
     with open(filename, 'w') as f:
         for i in range(len(words)):
             line = words[i] + ' = ' + str(ids[i]) + ' = ' + str(corpfreq[i])  + ' ' + str(docfreq[i]) + '\n'
@@ -75,9 +75,20 @@ def save_idx_to_file(idxfile, newsgroup):
             f.write(path + '\n')
     f.close()
 
-def main(dirpath):
+def load_vocabulary(vocpath):
+    """
+    Loads vocabulary from a file
+    """
+    with open(vocpath, 'r') as f:
+        vocabulary = f.read().splitlines() 
+
+    return vocabulary
+
+def main(dirpath, vocpath):
+    
     train_newsgroups = fetch_20newsgroups(subset='train')
-    train_counter = CountVectorizer(stop_words='english')
+    vocabulary = load_vocabulary(vocpath)
+    train_counter = CountVectorizer(stop_words='english', vocabulary=vocabulary, min_df=5)
     train_mat = train_counter.fit_transform(train_newsgroups.data)
     train_mat.sort_indices()
 
@@ -88,8 +99,8 @@ def main(dirpath):
         train_list[i].append([j,v])
 
     save_corpus_to_file(dirpath + '/20ng.train.corpus', train_list)
-    save_vocabulary_to_file(dirpath + '/20ng.train.voca', train_list, train_counter)
+    save_vocabulary_to_file(dirpath + '/20ng.train.voca', train_list,train_counter)
     save_idx_to_file(dirpath + '/20ng.train.idx', train_newsgroups)
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])

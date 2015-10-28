@@ -55,10 +55,10 @@ if $REUTERS; then
     mkdir -p $DATAPATH/reuters
     echo -n "Enter path of Reuters dataset English Vol 1: "
     read REUTERSV1PATH
-    echo -n "Enter path of Reuters dataset English Vol 2: "
-    read REUTERSV2PATH
+    #echo -n "Enter path of Reuters dataset English Vol 2: "
+    #read REUTERSV2PATH
     echo "Preprocessing and generating BOWs"
-    python python/reuters/docs2tfdocs.py --split train 80 --split test 20 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH} ${REUTERSV2PATH}
+    python python/reuters/docs2tfdocs.py --split train 100 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH}
     echo "Done processing Reuters corpus"
 fi
 

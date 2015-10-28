@@ -49,6 +49,9 @@ if __name__ == "__main__":
         action="store", dest='nclus',help="Number of cluster if apply [100]")
     p.add_argument("--min_cluster_size",default=3,type=int,
             action="store", dest='min_cluster_size',help="Minimum size of cluster for default clustering[3]")
+    p.add_argument("--min_coherence",default=2.0,type=float,
+            action="store", dest='min_coherence',
+            help="Minimum coherence on training[2.0]")
     p.add_argument("--thres",default=0.7,type=float,
             action="store", dest='thres',
             help="Threshold for clustering")
@@ -73,6 +76,7 @@ if __name__ == "__main__":
 
 
 
+    print "======================================= Starting point"
     opts = p.parse_args()
 
     if len(opts.params)>1:
@@ -119,6 +123,7 @@ if __name__ == "__main__":
     corpus_test=smh.smh_load(opts.test_corpus)
 
     for r,l,s in params:
+        print "======================================= experiment for",r,l,s
         if s>0:
             print "Experiment tuples (r) {0}, Number of tuples (l) {1}, S* {2}".format(r,l,s)
         else:
@@ -176,9 +181,13 @@ if __name__ == "__main__":
 
         # Filter wiht coherence
         print "Filtering by coherence..."
-        m_,co=coherence(m,corpus_train,None,min_coherence=0.0)
-
-        print "Calculating coherence..."
+        print "Original number of topics",m.size()
+        print "Calculating coherence on training..."
+        m_,co=coherence(m,corpus_train,None,min_coherence=opts.min_coherence)
+        print "Resulting number of topics",m_.size()
+        vals=[c for t,c in co]
+        print "Average coherence on training:",sum(vals)/len(vals)
+        print "Calculating coherence on testing..."
         tmp_,co=coherence(m_,corpus_test,topic2corpus)
         co=[(c,t) for t,c in co ]
         co.sort()
@@ -197,10 +206,10 @@ if __name__ == "__main__":
             h=pl.hist(vals)
             if s>0:
                 pl.title("r={0},l={1},S*={2} (Avg. {3})".format(r,l,s,sum(vals)/len(vals)))
-                fn=opts.fig_pref+"_{0}_{1}_{2}.pdf".format(r,l,s)
+                fn=opts.fig_pref+"{0}_{1}_{2}.pdf".format(r,l,s)
             else:
                 pl.title("r={0},l={1} (Avg. {2})".format(r,l,sum(vals)/len(vals)))
-                fn=opts.fig_pref+"_{0}_{1}}.pdf".format(r,l)
+                fn=opts.fig_pref+"{0}_{1}}.pdf".format(r,l)
             print "Saving fig",fn
             pl.savefig(fn,format='PDF')
             pl.clf()
@@ -217,19 +226,21 @@ if __name__ == "__main__":
                     t=m_.ldb[t]
                     ws=[voca[w.item] for w in t]
                     print c,", ".join(ws)
+            print "======"
         if opts.topics_pref:
             filename=opts.topics_pref+"r_{0}_l_{1}.topics".format(r,l)
             print "Saving topics to",filename
             with open(filename ,'w') as ft:
                 print "Total tópicos", len(co)
-                for c,t in co[:10]:
+                for c,t in co:
                     t=m_.ldb[t]
                     ws=[voca[w.item] for w in t]
                     print >> ft,c,", ".join(ws)
         
-        print "======"
         print "Total amount of time:",total
         print "Average coherence:",sum(vals)/len(vals)
+        print "Maximum coherence:",max(vals)
+        print "Minimum coherence:",min(vals)
         print "Total of topics:",m_.size()
 
     if len(cs)==0:
@@ -237,7 +248,7 @@ if __name__ == "__main__":
     else:
         # Draw boxplot sizes
         if opts.fig_pref:
-            ax=pl.figure(figsize=(6, 8))
+            ax=pl.figure()
             vals=[[co for co,i in  d] for x,d in cs]
             pl.boxplot(vals)
             pl.xticks(range(1,len(cs)+1),["r={0},l={1}".format(x[0],x[1]) for x,d in

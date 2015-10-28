@@ -45,3 +45,6 @@ report.rst
 Makefile
 .clang_complete
 fig/
+exps/figs/
+exps/models/
+exps/topics/

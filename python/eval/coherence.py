@@ -19,7 +19,7 @@ import utils
 
 def coherence(topics, corpus,t2c=None,ntop=10,version="pmi",min_coherence=0.0):
     results=[]
-    smh_=smh.SMH(size=topics.ldb.size,dim=topics.ldb.dim)
+    smh_=smh.SMH(size=0,dim=topics.ldb.dim)
     for itopic,topic in enumerate(topics.ldb):
         coherence=0.0
         if topic.size == 0:

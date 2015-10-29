@@ -106,6 +106,11 @@ if __name__ == "__main__":
     if opts.expand:
         print "Loading corpus for expansion:",opts.expand
         expand=smh.smh_load(opts.expand)
+        if not (expand.ldb.size==ifs.ldb.dim and expand.ldb.dim==ifs.ldb.size):
+            print "ifs", ifs.ldb.size, ifs.ldb.dim, "corpus", expand.ldb.size, expand.ldb.dim
+            print "Error with files inverted file and corpus"
+            sys.exit(1)
+
 
     if not opts.l:
         params=[(int(r),s2l(s,r),s) for r,s in opts.params]
@@ -251,7 +256,7 @@ if __name__ == "__main__":
             ax=pl.figure()
             vals=[[co for co,i in  d] for x,d in cs]
             pl.boxplot(vals)
-            pl.xticks(range(1,len(cs)+1),["r={0},l={1}".format(x[0],x[1]) for x,d in
+            pl.xticks(range(1,len(cs)+1),["r={0},l={1},n={2}".format(x[0],x[1],len(d)) for x,d in
                 cs],rotation="vertical")
             #pl.ylim((ax.get_ylim()[],0))
             fn=opts.fig_pref+"boxplot.pdf"

@@ -10,8 +10,8 @@ time python python/experiments.py\
     --fig_pref exps/exp2/figs/nips1k_\
     --topics_pref exps/exp2/topics/nips1k_\
     --clus --min_cluster_size 5\
-    --min_coherence 1.0\
-    --cutoff 2\
+    --min_coherence 2.0\
+    --cutoff 3\
     -p 3 0.2\
     -p 3 0.18\
     -p 3 0.15\
@@ -29,8 +29,8 @@ time python python/experiments.py\
     --fig_pref exps/exp2/figs/20ng5k_\
     --topics_pref exps/exp2/topics/20ng5k_\
     --clus --min_cluster_size 5\
-    --min_coherence 3.0\
-    --cutoff 2\
+    --min_coherence 2.0\
+    --cutoff 3\
     -p 3 0.2\
     -p 3 0.18\
     -p 3 0.15\
@@ -48,8 +48,8 @@ time python python/experiments.py\
     --fig_pref exps/exp2/figs/20ng10k_\
     --topics_pref exps/exp2/topics/20ng10k_\
     --clus --min_cluster_size 5\
-    --min_coherence 3.0\
-    --cutoff 2\
+    --min_coherence 2.0\
+    --cutoff 3\
     -p 3 0.2\
     -p 3 0.18\
     -p 3 0.15\

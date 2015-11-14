@@ -1,11 +1,14 @@
 #!/bin/bash
 #
-# Script to download and preprocess the oxford buildings dataset
+# Script to download and preprocess the NIPS, 20 Newsgroups, Reuters and
+# Wikipedia corpora
 #
 ROOTPATH=`pwd`
 THIRDPARTYPATH=$ROOTPATH/3rdParty
 DATAPATH=$ROOTPATH/data
 mkdir -p $DATAPATH
+WIKIDUMP=enwiki-20150702-pages-articles.xml.bz2
+
 NIPS=false
 REUTERS=false
 TWENTYNG=false
@@ -46,7 +49,10 @@ if $NIPS; then
     echo "Preparing NIPS corpus"
     mkdir -p $DATAPATH
     echo "Downloading NIPS corpus"
-    wget -qO- -O $DATAPATH/tmp.zip http://arbylon.net/projects/nips/nips-20110223.zip && unzip $DATAPATH/tmp.zip -d $DATAPATH/ && rm $DATAPATH/tmp.zip
+    wget -qO- -O $DATAPATH/tmp.zip \
+         http://arbylon.net/projects/nips/nips-20110223.zip
+    unzip $DATAPATH/tmp.zip -d $DATAPATH/
+    rm $DATAPATH/tmp.zip
     echo "Done processing NIPS corpus"
 fi
 
@@ -55,10 +61,14 @@ if $REUTERS; then
     mkdir -p $DATAPATH/reuters
     echo -n "Enter path of Reuters dataset English Vol 1: "
     read REUTERSV1PATH
-    #echo -n "Enter path of Reuters dataset English Vol 2: "
-    #read REUTERSV2PATH
+    echo -n "Enter path of Reuters dataset English Vol 2: "
+    read REUTERSV2PATH
     echo "Preprocessing and generating BOWs"
-    python python/reuters/docs2tfdocs.py --split train 100 --stop-words data/english.stop -p 6 -v --odir $DATAPATH/reuters ${REUTERSV1PATH}
+    python python/reuters/docs2tfdocs.py \
+           --split train 100 \
+           --stop-words data/english.stop \
+           -p 6 -v \
+           --odir $DATAPATH/reuters ${REUTERSV1PATH}
     echo "Done processing Reuters corpus"
 fi
 
@@ -66,9 +76,11 @@ if $TWENTYNG; then
     echo "Preparing 20 newsgroups corpus"
     mkdir -p $DATAPATH/20newsgroups
     echo "Downloading vocabulary"
-    wget -qO- -O $DATAPATH/20newsgroups/vocabulary.txt http://qwone.com/~jason/20Newsgroups/vocabulary.txt
+    wget -qO- -O $DATAPATH/20newsgroups/vocabulary.txt \
+         http://qwone.com/~jason/20Newsgroups/vocabulary.txt
     echo "Downloading, preprocessing and generating BOWs"
-    python python/20newsgroups/20ng2corpus.py data/20newsgroups $DATAPATH/20newsgroups/vocabulary.txt
+    python python/20newsgroups/20ng2corpus.py data/20newsgroups \
+           $DATAPATH/20newsgroups/vocabulary.txt
     echo "Done processing 20 newsgroups corpus"
 fi
 
@@ -80,11 +92,13 @@ if $WIKI2TEXT; then
        git clone git://github.com/nim-lang/Nim.git $THIRDPARTYPATH/Nim
        cd $THIRDPARTYPATH/Nim
        git clone --depth 1 git://github.com/nim-lang/csources
-       cd csources && sh build.sh
+       cd csources
+       sh build.sh
        cd ..
        bin/nim c koch
        ./koch boot -d:release
        export PATH=$PATH:$THIRDPARTYPATH/Nim/bin
+
        echo "Done installing Nim"
    fi
 
@@ -97,13 +111,32 @@ fi
 if $WIKIPEDIA; then
     echo "Preparing Wikipedia"    
     mkdir -p $DATAPATH/wikipedia
-    echo "Downloading Wikipedia dump"    
-    #wget -qO- -O $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 https://dumps.wikimedia.org/enwiki/20150702/enwiki-20150702-pages-articles.xml.bz2
-    echo "Downloading stopwords"    
-    wget -qO- -O $DATAPATH/stopwords_english.txt https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
+
+    if [ ! -f $DATAPATH/wikipedia/$WIKIDUMP]; then
+        echo "Downloading Wikipedia dump"
+        wget -qO- -O $DATAPATH/wikipedia/$WIKIDUMP \
+             https://dumps.wikimedia.org/enwiki/20150702/$WIKIDUMP
+    fi
+
+    if [ ! -f $DATAPATH/stopwords_english.txt]; then
+        echo "Downloading stopwords"
+        wget -qO- -O $DATAPATH/stopwords_english.txt \
+             https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
+    fi
+    
     echo "Uncompressing and parsing Wikipedia dump"
-    bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
+    bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 \
+        | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
+
     echo "Genereting BOWs"
-    python $ROOTPATH/python/wikipedia/wiki2corpus.py $DATAPATH/wikipedia/enwiki.txt --split train 80 --split test 20 --odir $DATAPATH/wikipedia/ --stop-words $ROOTPATH/data/stopwords_english.txt --cutoff 10 --corpus wiki
+    python $ROOTPATH/python/wikipedia/wiki2corpus.py \
+           $DATAPATH/wikipedia/enwiki.txt \
+           --split train 80 \
+           --split test 20 \
+           --odir $DATAPATH/wikipedia/ \
+           --stop-words $ROOTPATH/data/stopwords_english.txt \
+           --cutoff 10 \
+           --corpus wiki
+
     echo "Done processing Wikipedia corpus"
 fi

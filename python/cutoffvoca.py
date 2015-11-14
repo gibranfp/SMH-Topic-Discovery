@@ -7,13 +7,17 @@
 # 2015/IIMAS, México
 # ----------------------------------------------------------------------
 
+from  eval import utils
+
 # MAIN program
 if __name__ == "__main__":
     import argparse
     p = argparse.ArgumentParser("Mines")
-    p.add_argument("--max",default=1000,type=int,
+    p.add_argument("--max",default=None,type=int,
             action="store", dest="max",
             help="Maximum vocabulary")
+    p.add_argument("--voca",default=None,dest="basevoca",
+        action="store", help="Vocabulary file to cut off from")
     p.add_argument("voca",default=None,
         action="store", help="Vocabulary file")
     p.add_argument("corpus",default=None,
@@ -26,6 +30,10 @@ if __name__ == "__main__":
 
     opts = p.parse_args()
 
+    f2b=None
+    if opts.basevoca:
+        f2b=utils.t2c(opts.voca,opts.basevoca)
+
     fullvoca=[]
     for line in open(opts.voca):
         bits=line.strip().split()
@@ -37,13 +45,15 @@ if __name__ == "__main__":
     nvoca=open(opts.nvoca,'w')
     i=0;
     for s,line in fullvoca:
-        if i>= opts.max:
+        if opts.max and i>= opts.max:
             break
         bits=line.strip().split()
-        if len(bits[0])>3:
-            print >> nvoca, line.strip()
-            voca[int(bits[2])]=True
-            i+=1
+        idd=int(bits[2])
+        if f2b and not f2b.has_key(idd):
+            continue
+        print >> nvoca, line.strip()
+        voca[int(bits[2])]=True
+        i+=1
     nvoca.close()
 
     ncorpus=open(opts.ncorpus,'w')

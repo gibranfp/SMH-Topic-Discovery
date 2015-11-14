@@ -158,7 +158,8 @@ if __name__ == "__main__":
                 from sklearn.cluster import KMeans
                 print "Using k-means"
                 start = time.clock()
-                kmeans = KMeans(init='k-means++', n_clusters=opts.nclus,n_init=10)
+                kmeans = KMeans(init='k-means++',
+                        n_clusters=opts.nclus,n_init=10,verbose=True)
                 c=m.cluster_sklearn(kmeans)
             elif opts.clus_method=='minibatch':
                 from sklearn.cluster import MiniBatchKMeans
@@ -193,7 +194,7 @@ if __name__ == "__main__":
         vals=[c for t,c in co]
         print "Average coherence on training:",sum(vals)/len(vals)
         print "Calculating coherence on testing..."
-        tmp_,co=coherence(m_,corpus_test,topic2corpus)
+        tmp_,co=coherence(m_,corpus_test,topic2corpus,min_coherence=-1)
         co=[(c,t) for t,c in co ]
         co.sort()
         co.reverse()
@@ -214,7 +215,7 @@ if __name__ == "__main__":
                 fn=opts.fig_pref+"{0}_{1}_{2}.pdf".format(r,l,s)
             else:
                 pl.title("r={0},l={1} (Avg. {2})".format(r,l,sum(vals)/len(vals)))
-                fn=opts.fig_pref+"{0}_{1}}.pdf".format(r,l)
+                fn=opts.fig_pref+"{0}_{1}.pdf".format(r,l)
             print "Saving fig",fn
             pl.savefig(fn,format='PDF')
             pl.clf()

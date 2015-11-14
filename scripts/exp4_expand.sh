@@ -11,7 +11,7 @@ time python python/experiments.py\
     --topics_pref exps/exp4/topics/nips1k_expand\
     --clus --min_cluster_size 5\
     --min_coherence 2.0\
-    --cutoff 3\
+    --cutoff 2\
     -p 3 0.2\
     -p 3 0.18\
     -p 3 0.15\
@@ -30,7 +30,7 @@ time python python/experiments.py\
     --topics_pref exps/exp4/topics/nips1k_expand_weights\
     --clus --min_cluster_size 5\
     --min_coherence 2.0\
-    --cutoff 3\
+    --cutoff 2\
     -p 3 0.2\
     -p 3 0.18\
     -p 3 0.15\
@@ -50,7 +50,7 @@ time python python/experiments.py\
     --topics_pref exps/exp4/topics/nips_expand\
     --clus --min_cluster_size 5\
     --min_coherence 2.0\
-    --cutoff 3\
+    --cutoff 2\
     -p 3 0.2\
     -p 3 0.18\
     -p 3 0.15\
@@ -69,7 +69,7 @@ time python python/experiments.py\
     --topics_pref exps/exp4/topics/nips_expand_weights\
     --clus --min_cluster_size 5\
     --min_coherence 2.0\
-    --cutoff 3\
+    --cutoff 2\
     -p 3 0.2\
     -p 3 0.18\
     -p 3 0.15\

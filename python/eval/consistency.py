@@ -18,6 +18,14 @@ def topics_inter_distance(topics1, topics2):
         
     return distmat
 
+def topics_inter_overlap(topics1, topics2):
+    distmat = np.zeros((topics1.size(), topics2.size()))
+    for i, t1 in enumerate(topics1.ldb):
+        for j, t2 in enumerate(topics2.ldb):
+            distmat[i, j] = 1.0 - float(sa.list_overlap(t1, t2))
+        
+    return distmat
+
 def topics_entropy(distmat):
     np.fill_diagonal(distmat, 1.0)
     
@@ -61,10 +69,9 @@ def topics_min_inter_distance(topics1, topics2):
 
     return np.argmin(distmat, axis=1), np.min(distmat, axis=1)
 
-def topics_consistency(topics1, topics2, thres=0.8):
-    distmat = topics_inter_distance(topics1, topics2)
-    distmat[distmat > thres] = np.inf
-    
+def topics_consistency(topics1, topics2):
+    distmat = topics_inter_overlap(topics1, topics2)
+
     indices = linear_assignment(distmat)
     
     not_in_topics1 = np.delete(np.arange(topics1.size()), indices[:, 0])

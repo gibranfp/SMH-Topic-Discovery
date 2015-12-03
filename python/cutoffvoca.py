@@ -68,8 +68,11 @@ if __name__ == "__main__":
                 bits_.append(bit)
             except KeyError:
                 pass
-        if len(bits_)>=0:
+        if len(bits_)>0:
             print >> ncorpus, len(bits_)," ".join(bits_)
+        if len(bits_)==0:
+            print >> ncorpus, "0"
+
 
     ncorpus.close()
 

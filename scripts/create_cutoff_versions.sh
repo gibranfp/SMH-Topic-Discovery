@@ -114,21 +114,21 @@ python python/cutoffvoca.py --max 30000\
     --voca  data/wikipedia/wiki.vocab\
     data/reuters/reuters.train.voca\
     data/reuters/reuters.train.corpus\
-    data/reuters/reuters.train30k.voca\
-    data/reuters/reuters.train30k.corpus
+    data/reuters/reuters30k.train.voca\
+    data/reuters/reuters30k.train.corpus
 
 smhcmd ifindex -w 2\
-    data/reuters/reuters.train30k.corpus\
-    data/reuters/reuters.train30k.bin.ifs
+    data/reuters/reuters30k.train.corpus\
+    data/reuters/reuters30k.train.bin.ifs
 
 smhcmd ifindex\
-    data/reuters/reuters.train30k.corpus\
-    data/reuters/reuters.train30k.tf.ifs
+    data/reuters/reuters30k.train.corpus\
+    data/reuters/reuters30k.train.tf.ifs
 
 smhcmd weights\
-    data/reuters/reuters.train30k.corpus\
-    data/reuters/reuters.train30k.tf.ifs\
-    data/reuters/reuters.train30k.weights
+    data/reuters/reuters30k.train.corpus\
+    data/reuters/reuters30k.train.tf.ifs\
+    data/reuters/reuters30k.train.weights
 
 
 

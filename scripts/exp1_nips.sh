@@ -31,6 +31,7 @@ time python python/experiments.py\
     --clus --min_cluster_size 5\
     --min_coherence 2.0\
     --cutoff 3\
+    -p 2 315 -l\
     -p 3 315 -l\
     -p 4 315 -l\
     -p 5 315 -l\
@@ -49,6 +50,7 @@ time python python/experiments.py\
     --clus --min_cluster_size 5\
     --min_coherence 2.0\
     --cutoff 3\
+    -p 2 0.2\
     -p 3 0.2\
     -p 4 0.2\
     -p 5 0.2\

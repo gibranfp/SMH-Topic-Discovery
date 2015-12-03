@@ -31,6 +31,7 @@ def coherence(topics, corpus,t2c=None,ntop=10,version="pmi",min_coherence=0.0):
                 try:
                     docs_i=corpus.ldb[t2c[item_i]]
                 except KeyError:
+                    print "Error not found in voca",item_i
                     continue
             else:
                 docs_i=corpus.ldb[item_i]
@@ -38,10 +39,12 @@ def coherence(topics, corpus,t2c=None,ntop=10,version="pmi",min_coherence=0.0):
                 item_j=topic[j].item
                 if t2c:
                     try:
-                        docs_i=corpus.ldb[t2c[item_j]]
+                        docs_j=corpus.ldb[t2c[item_j]]
                     except KeyError:
+                        print "Error not found in voca",item_j
                         continue
-                docs_j=corpus.ldb[item_j]
+                else:
+                    docs_j=corpus.ldb[item_j]
                 if version=='original':
                     Dij=smh.sa.list_intersection_size(docs_i,docs_j)
                     coherence+=math.log((Dij*0.0001)/float(docs_j.size),10)
@@ -52,6 +55,7 @@ def coherence(topics, corpus,t2c=None,ntop=10,version="pmi",min_coherence=0.0):
                     p_ij=smh.sa.list_sum_freq(docs_ij)
                     if p_ij > 0:
                         coherence+=-1.0*math.log(float(p_ij)/float(p_i*p_j),10)
+
         if coherence>min_coherence:
             results.append((itopic,coherence/sum(range(ntop))))
             smh_.push(topic)

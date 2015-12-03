@@ -16,6 +16,7 @@ import matplotlib.pyplot as pl
 from smh import smh
 import math
 from eval.coherence import coherence, utils
+from eval.consistency import topics_entropy_sum
 import time
 timestr = time.strftime("%Y%m%d-%H%M%S")
 
@@ -242,11 +243,14 @@ if __name__ == "__main__":
                     t=m_.ldb[t]
                     ws=[voca[w.item] for w in t]
                     print >> ft,c,", ".join(ws)
-        
+       
         print "Total amount of time:",total
-        print "Average coherence:",sum(vals)/len(vals)
-        print "Maximum coherence:",max(vals)
-        print "Minimum coherence:",min(vals)
+        print "Average coherence  :",sum(vals)/len(vals)
+        print "Maximum coherence  :",max(vals)
+        print "Minimum coherence  :",min(vals)
+        print "Zero coherence     :",sum([1 for x in vals if vals==0.0])
+        print "Entropy            :",sum(topics_entropy_sum(m_))
+        print "Entropy normalized :",sum(topics_entropy_sum(m_))/m_.size()
         print "Total of topics:",m_.size()
 
     if len(cs)==0:
@@ -254,15 +258,20 @@ if __name__ == "__main__":
     else:
         # Draw boxplot sizes
         if opts.fig_pref:
-            ax=pl.figure()
+            fig=pl.figure()
+            ax = pl.subplot(111)
             vals=[[co for co,i in  d] for x,d in cs]
             pl.boxplot(vals)
-            pl.xticks(range(1,len(cs)+1),["r={0},l={1},n={2}".format(x[0],x[1],len(d)) for x,d in
-                cs],rotation="vertical")
+
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.83, box.height])
+
+            for j,(x,d) in enumerate(cs):
+                label="r={0},l={1},n={2}".format(x[0],x[1],len(d))
+                pl.figtext(0.78, 0.80-j*0.03, "("+str(j+1)+") "+label, size='small')
             #pl.ylim((ax.get_ylim()[],0))
             fn=opts.fig_pref+"boxplot.pdf"
             print "Saving fig",fn
-            pl.tight_layout()
             pl.savefig(fn,format='PDF')
             pl.clf()
 

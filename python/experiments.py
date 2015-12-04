@@ -98,21 +98,11 @@ if __name__ == "__main__":
     print "Loading file ifs:",opts.ifs
     ifs=smh.smh_load(opts.ifs)
 
+    # TODO Calculate thest two variable
     weights=None
-    if opts.weights:
-        print "Loading weights:",opts.weights
-        weights=smh.Weights(opts.weights)
-
     expand=None
-    if opts.expand:
-        print "Loading corpus for expansion:",opts.expand
-        expand=smh.smh_load(opts.expand)
-        if not (expand.ldb.size==ifs.ldb.dim and expand.ldb.dim==ifs.ldb.size):
-            print "ifs", ifs.ldb.size, ifs.ldb.dim, "corpus", expand.ldb.size, expand.ldb.dim
-            print "Error with files inverted file and corpus"
-            sys.exit(1)
 
-
+    weights=None
     if not opts.l:
         params=[(int(r),s2l(s,r),s) for r,s in opts.params]
     else:

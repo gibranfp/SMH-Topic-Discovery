@@ -18,10 +18,14 @@ import math
 from eval.coherence import coherence, utils
 from eval.consistency import topics_entropy_sum
 import time
+import random
 timestr = time.strftime("%Y%m%d-%H%M%S")
 
 def s2l(s,r):
     return int(math.log(0.5)/math.log(1-math.pow(s,r)))
+
+
+smh.smh_init(random.randint(0,4294967296))
 
 
 # MAIN program
@@ -98,11 +102,21 @@ if __name__ == "__main__":
     print "Loading file ifs:",opts.ifs
     ifs=smh.smh_load(opts.ifs)
 
-    # TODO Calculate thest two variable
     weights=None
-    expand=None
+    if opts.weights:
+        print "Loading weights:",opts.weights
+        weights=smh.Weights(opts.weights)
 
-    weights=None
+    expand=None
+    if opts.expand:
+        print "Loading corpus for expansion:",opts.expand
+        expand=smh.smh_load(opts.expand)
+        if not (expand.ldb.size==ifs.ldb.dim and expand.ldb.dim==ifs.ldb.size):
+            print "ifs", ifs.ldb.size, ifs.ldb.dim, "corpus", expand.ldb.size, expand.ldb.dim
+            print "Error with files inverted file and corpus"
+            sys.exit(1)
+
+
     if not opts.l:
         params=[(int(r),s2l(s,r),s) for r,s in opts.params]
     else:
@@ -180,12 +194,12 @@ if __name__ == "__main__":
         print "Filtering by coherence..."
         print "Original number of topics",m.size()
         print "Calculating coherence on training..."
-        m_,co=coherence(m,corpus_train,None,min_coherence=opts.min_coherence)
+        m_,co=coherence(m,corpus_train,None,ntop=10,min_coherence=opts.min_coherence)
         print "Resulting number of topics",m_.size()
         vals=[c for t,c in co]
         print "Average coherence on training:",sum(vals)/len(vals)
         print "Calculating coherence on testing..."
-        tmp_,co=coherence(m_,corpus_test,topic2corpus,min_coherence=-1)
+        tmp_,co=coherence(m_,corpus_test,topic2corpus,ntop=10,min_coherence=-1)
         co=[(c,t) for t,c in co ]
         co.sort()
         co.reverse()
@@ -235,6 +249,11 @@ if __name__ == "__main__":
                     print >> ft,c,", ".join(ws)
        
         print "Total amount of time:",total
+        print "Average coherence  :",sum(vals)/len(vals)
+        print "Maximum coherence  :",max(vals)
+        print "Minimum coherence  :",min(vals)
+        tmp_,co=coherence(m_,corpus_test,topic2corpus,ntop=10,min_coherence=-1)
+        vals=[c for c,t in co]
         print "Average coherence  :",sum(vals)/len(vals)
         print "Maximum coherence  :",max(vals)
         print "Minimum coherence  :",min(vals)

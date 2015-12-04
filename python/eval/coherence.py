@@ -17,14 +17,17 @@ import math
 from smh import smh
 import utils
 
-def coherence(topics, corpus,t2c=None,ntop=10,version="pmi",min_coherence=0.0):
+def coherence(topics, corpus,t2c=None,ntop=None,version="pmi",min_coherence=0.0):
     results=[]
     smh_=smh.SMH(size=0,dim=topics.ldb.dim)
     for itopic,topic in enumerate(topics.ldb):
         coherence=0.0
         if topic.size == 0:
             continue
-        ntop=min(ntop,topic.size)
+        if ntop:
+            ntop=min(ntop,topic.size)
+        else:
+            ntop=topic.size
         for i in range(ntop):
             item_i=topic[i].item
             if t2c:

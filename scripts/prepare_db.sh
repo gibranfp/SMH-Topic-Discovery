@@ -8,13 +8,15 @@ THIRDPARTYPATH=$ROOTPATH/3rdParty
 DATAPATH=$ROOTPATH/data
 mkdir -p $DATAPATH
 WIKIDUMP=enwiki-20150702-pages-articles.xml.bz2
+WIKIDUMPES=eswiki-20151202-pages-articles.xml.bz2
 
 NIPS=false
 REUTERS=false
 TWENTYNG=false
 WIKIPEDIA=false
+WIKIPEDIAES=false
 WIKI2TEXT=false
-while getopts ":abcnrtw" opt; do
+while getopts ":abcnrtwe" opt; do
     case $opt in
         a)
             NIPS=true
@@ -37,6 +39,9 @@ while getopts ":abcnrtw" opt; do
         ;;
         w)
             WIKIPEDIA=true
+        ;;
+        e)
+            WIKIPEDIAES=true
         ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -137,6 +142,39 @@ if $WIKIPEDIA; then
            --stop-words $ROOTPATH/data/stopwords_english.txt \
            --cutoff 10 \
            --corpus wiki
+
+    echo "Done processing Wikipedia corpus"
+fi
+
+if $WIKIPEDIAES; then
+    echo "Preparing Wikipedia in Spanish"    
+    mkdir -p $DATAPATH/wikipedia
+
+    if [ ! -f $DATAPATH/wikipedia/$WIKIDUMPES ]; then
+        echo "Downloading Wikipedia dump"
+        wget -qO- -O $DATAPATH/wikipedia/$WIKIDUMPES \
+             https://dumps.wikimedia.org/eswiki/20151202/$WIKIDUMPES
+    fi
+
+    if [ ! -f $DATAPATH/stopwords_spanish.txt ]; then
+        echo "Downloading stopwords"
+        wget -qO- -O $DATAPATH/stopwords_english.txt \
+             https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_spanish.txt
+    fi
+    
+    echo "Uncompressing and parsing Wikipedia dump"
+    bunzip2 -c $DATAPATH/wikipedia/$WIKIDUMPES \
+        | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/eswiki.txt
+
+    echo "Genereting BOWs"
+    python $ROOTPATH/python/wikipedia/wiki2corpus.py \
+           $DATAPATH/wikipedia/eswiki.txt \
+           --split train 80 \
+           --split test 20 \
+           --odir $DATAPATH/wikipedia/ \
+           --stop-words $ROOTPATH/data/stopwords_spanish.txt \
+           --cutoff 10 \
+           --corpus wikies
 
     echo "Done processing Wikipedia corpus"
 fi

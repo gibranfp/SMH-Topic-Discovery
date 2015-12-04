@@ -120,6 +120,7 @@ if __name__ == "__main__":
     verbose("Total number of words",sum(corpus.values())) 
 
     files=[]
+    indixes=[]
     # Creating splits
     first_split=None
     verbose("Creating splits")
@@ -133,11 +134,13 @@ if __name__ == "__main__":
         for x,y in opts.splits:
             y=int(y)
             files.append(open(os.path.join(opts.odir,opts.corpus+"."+x+".corpus"),'w'))
-            splits.append(dict([ (title,(files[-1],x)) for title in idx[ini:ini+int(y*0.01*len(idx))]]))
+            indixes.append(open(os.path.join(opts.odir,opts.corpus+"."+x+".index"),'w'))
+            splits.append(dict([ (title,(files[-1],x,indixes[-1])) for title in idx[ini:ini+int(y*0.01*len(idx))]]))
             ini+=int(y*0.01*len(idx))
-        splits.append(dict([ (title,(files[-1],x)) for title in idx[ini:]]))
+        splits.append(dict([ (title,(files[-1],x,indixes[-1])) for title in idx[ini:]]))
     else:
         files.append(open(os.path.join(opts.odir,opts.corpus+".corpus"),'w'))
+        indixes.append(open(os.path.join(opts.odir,opts.corpus+".index"),'w'))
         first_split=""
         splits=[dict([(title,(files[-1],"")) for title in idx])]
 
@@ -184,6 +187,7 @@ if __name__ == "__main__":
 
 
     ii=0
+    ndocs=0
     header=None
     verbose("Creating corpus")
     for line in open(opts.WIKI):
@@ -195,6 +199,8 @@ if __name__ == "__main__":
             if header:
                 info=["{0}:{1}".format(vocab_[w],n) for w,n in doc.most_common() if vocab_.has_key(w)] 
                 print(len(info)," ".join(info),file=splits[header][0])
+                print(ndocs,line.strip(),file=splits[header][2])
+                ndocs+=1
             doc= Counter()
             ii+=1
             header=line[2:-2].strip()
@@ -204,9 +210,13 @@ if __name__ == "__main__":
     if header:
         info=["{0}:{1}".format(vocab_[w],n) for w,n in doc.most_common() if vocab_.has_key(w)] 
         print(len(info)," ".join(info),file=splits[header][0])
+        print(ndocs,line.strip(),file=splits[header][2])
 
     for file in files:
         file.close()
+    for file in indixes:
+        file.close()
+ 
     verbose("Creating vocabulary")
     vocabf=open(os.path.join(opts.odir,opts.corpus+".vocab"),"w")
     for i,(w,n) in enumerate(vocab):

@@ -24,9 +24,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.cluster import KMeans
+from sklearn.cluster import SpectralClustering
+from sklearn.cluster import AgglomerativeClustering
 from sklearn.datasets import load_digits
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import normalize
+from sklearn.preprocessing import MinMaxScaler
 
 verbose = lambda *a: None
 def centers_from_docs_labels(listdb, data):
@@ -37,7 +40,6 @@ def centers_from_docs_labels(listdb, data):
             centers[i] += data[j[item],:]
         centers[i]/l.size()
     return centers
-
 
 def centers_from_docsets_labels(listdb, docsets, labels):
    data = listdb.toarray()
@@ -64,7 +66,17 @@ def centers_from_docsets_labels(listdb, docsets, labels):
         centers[i]=centers[i]/sizes[i]
    return centers
 
+def centers_from_docsets_centers(data, docsets, centers):
+   number_of_classes = np.max(labels) + 1
+   centers_ = np.zeros((number_of_classes, data.shape[1]))
+    
+   for i in range(number_of_classes):
+       centers_[i, :] = np.sum(centers[i, np.newaxis].T * data, axis=0)
 
+    # centers_ = centers_ / data.shape[0]
+   mms = MinMaxScaler(feature_range=(0,255)).fit(centers_)
+
+   return mms.transform(centers_)
 
 def bench_k_means(estimator, name, data):
     t0 = time()
@@ -186,24 +198,37 @@ if __name__ == "__main__":
             print "Cutting off topics..."
             m.cutoff(min=opts.cutoff)
         print "Size of cutted off mined topics:",m.size()
-        from sklearn.cluster import KMeans
-        print "Using k-means"
-        kmeans = KMeans(init='k-means++',
-                n_clusters=n_digits,n_init=10,verbose=False)
+
         data_=m.toarray()
+
+        kmeans = KMeans(init='k-means++',
+                        n_clusters=n_digits,
+                        n_init=10)
         kmeans.fit(data_)
+        
+        # agg = AgglomerativeClustering(n_clusters=n_digits,
+        #                               affinity='euclidean',
+        #                               linkage='ward')
+        # agg.fit(data_)
+        
+        # spectral = SpectralClustering(n_clusters=n_digits,
+        #                               eigen_solver='amg',
+        #                               affinity="nearest_neighbors")        
+        # spectral.fit(data_)
 
         centers=centers_from_docsets_labels(docs, m,  kmeans.labels_)
-    
+        # centers=centers_from_docsets_labels(docs, m,  agg.labels_)
+        # centers=centers_from_docsets_labels(docs, m,  spectral.labels_)
+
         predictions=[]
-        for datum in data:
+        for i, datum in enumerate(data):
             candidates=[]
-            for center in centers:
-                candidates.append(np.dot(centers,datum))
+            for j, center in enumerate(centers):
+                candidates.append(np.linalg.norm(center - datum))
             predictions.append(np.argmin(candidates))
-        
+
         print('% 9s   %.2fs    %i   %.3f   %.3f   %.3f   %.3f   %.3f    '
-          % ("SMH", 0, kmeans.inertia_,
+              % ("SMH", 0, 0,
              metrics.homogeneity_score(labels, predictions),
              metrics.completeness_score(labels, predictions),
              metrics.v_measure_score(labels, predictions),

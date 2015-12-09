@@ -150,21 +150,21 @@ if $WIKIPEDIAES; then
     echo "Preparing Wikipedia in Spanish"    
     mkdir -p $DATAPATH/wikipedia
 
-    if [ ! -f $DATAPATH/wikipedia/$WIKIDUMPES ]; then
-        echo "Downloading Wikipedia dump"
-        wget -qO- -O $DATAPATH/wikipedia/$WIKIDUMPES \
-             https://dumps.wikimedia.org/eswiki/20151202/$WIKIDUMPES
-    fi
+    #if [ ! -f $DATAPATH/wikipedia/$WIKIDUMPES ]; then
+    #    echo "Downloading Wikipedia dump"
+    #    wget -qO- -O $DATAPATH/wikipedia/$WIKIDUMPES \
+    #         https://dumps.wikimedia.org/eswiki/20151202/$WIKIDUMPES
+    #fi
 
     if [ ! -f $DATAPATH/stopwords_spanish.txt ]; then
         echo "Downloading stopwords"
-        wget -qO- -O $DATAPATH/stopwords_english.txt \
+        wget -qO- -O $DATAPATH/stopwords_spanish.txt \
              https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_spanish.txt
     fi
     
-    echo "Uncompressing and parsing Wikipedia dump"
-    bunzip2 -c $DATAPATH/wikipedia/$WIKIDUMPES \
-        | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/eswiki.txt
+    #echo "Uncompressing and parsing Wikipedia dump"
+    #bunzip2 -c $DATAPATH/wikipedia/$WIKIDUMPES \
+    #    | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/eswiki.txt
 
     echo "Genereting BOWs"
     python $ROOTPATH/python/wikipedia/wiki2corpus.py \

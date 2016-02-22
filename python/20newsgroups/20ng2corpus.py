@@ -84,11 +84,44 @@ def load_vocabulary(vocpath):
 
     return vocabulary
 
+
+categories = [
+    'alt.atheism',
+    'comp.graphics',
+    'comp.os.ms-windows.misc',
+    'comp.sys.ibm.pc.hardware',
+    'comp.sys.mac.hardware',
+    'comp.windows.x',
+    'misc.forsale',
+    'rec.autos',
+    'rec.motorcycles',
+    'rec.sport.baseball',
+    'rec.sport.hockey',
+    'sci.crypt',
+     'sci.electronics',
+     'sci.med',
+     'sci.space',
+     'soc.religion.christian',
+     'talk.politics.guns',
+     'talk.politics.mideast',
+     'talk.politics.misc',
+     'talk.religion.misc'       
+]
+# Uncomment the following to do the analysis on all the categories
+#categories = None
+
+
+
+
 def main(dirpath, vocpath):
-    
-    train_newsgroups = fetch_20newsgroups(subset='train')
+    # Loading data
+    train_newsgroups = fetch_20newsgroups(subset='train', categories=categories,
+         remove=('headers','footers', 'quotes'),
+        shuffle=True, random_state=42)
+
     vocabulary = load_vocabulary(vocpath)
-    train_counter = CountVectorizer(stop_words='english', vocabulary=vocabulary, min_df=5)
+    train_counter = CountVectorizer(stop_words='english', min_df=5)
+    #train_counter = CountVectorizer(stop_words='english', vocabulary=vocabulary, min_df=5)
     train_mat = train_counter.fit_transform(train_newsgroups.data)
     train_mat.sort_indices()
 

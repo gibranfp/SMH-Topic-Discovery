@@ -7,13 +7,17 @@ ROOTPATH=`pwd`
 THIRDPARTYPATH=$ROOTPATH/3rdParty
 DATAPATH=$ROOTPATH/data
 mkdir -p $DATAPATH
-WIKIDUMP=enwiki-20150702-pages-articles.xml.bz2
-WIKIDUMPES=eswiki-20151202-pages-articles.xml.bz2
+WIKIDUMPEN="http://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-pages-articles.xml.bz2"
+WIKIDUMPES="http://dumps.wikimedia.org/eswiki/20160203/eswiki-20160203-pages-articles.xml.bz2"
+WIKILINKEN="http://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-langlinks.sql.gz"
+WIKITITLEEN="https://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-page_props.sql.gz"
+WIKILINKES="http://dumps.wikimedia.org/eswiki/20160203/eswiki-20160203-langlinks.sql.gz"
+WIKITITLEES="http://dumps.wikimedia.org/eswiki/20160203/eswiki-20160203-page_props.sql.gz"
 
 NIPS=false
 REUTERS=false
 TWENTYNG=false
-WIKIPEDIA=false
+WIKIPEDIAEN=false
 WIKIPEDIAES=false
 WIKI2TEXT=false
 while getopts ":abcnrtwe" opt; do
@@ -38,7 +42,7 @@ while getopts ":abcnrtwe" opt; do
             TWENTYNG=true
         ;;
         w)
-            WIKIPEDIA=true
+            WIKIPEDIAEN=true
         ;;
         e)
             WIKIPEDIAES=true
@@ -113,24 +117,39 @@ if $WIKI2TEXT; then
     make
 fi
 
-if $WIKIPEDIA; then
+if $WIKIPEDIAEN; then
     echo "Preparing Wikipedia"    
     mkdir -p $DATAPATH/wikipedia
 
-    if [ ! -f $DATAPATH/wikipedia/$WIKIDUMP]; then
+    if [ ! -f $DATAPATH/wikipedia/wikien.xml.bz2 ]; then
         echo "Downloading Wikipedia dump"
-        wget -qO- -O $DATAPATH/wikipedia/$WIKIDUMP \
-             https://dumps.wikimedia.org/enwiki/20150702/$WIKIDUMP
+        wget -qO- -O $DATAPATH/wikipedia/wikien.xml.bz2 \
+             $WIKIDUMPEN
     fi
 
-    if [ ! -f $DATAPATH/stopwords_english.txt]; then
+  	if [ ! -f $DATAPATH/wikipedia/wikien.sql.gz ]; then
+        echo "Downloading Wikipedia link"
+        wget -qO- -O $DATAPATH/wikipedia/wikien.sql.gz \
+             $WIKILINKEN
+    fi
+
+
+  	if [ ! -f $DATAPATH/wikipedia/wikien.title.gz ]; then
+        echo "Downloading Wikipedia link"
+        wget -qO- -O $DATAPATH/wikipedia/wikien.title.gz \
+             $WIKITITLEEN
+    fi
+
+
+
+    if [ ! -f $DATAPATH/stopwords_english.txt ]; then
         echo "Downloading stopwords"
-        wget -qO- -O $DATAPATH/stopwords_english.txt \
+        wget -qO- -O $DATAPATH/data/stopwords_english.txt \
              https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
     fi
     
     echo "Uncompressing and parsing Wikipedia dump"
-    bunzip2 -c $DATAPATH/wikipedia/enwiki-20150702-pages-articles.xml.bz2 \
+    bunzip2 -c $DATAPATH/wikipedia/wikien.xml.bz2 \
         | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
 
     echo "Genereting BOWs"
@@ -139,9 +158,9 @@ if $WIKIPEDIA; then
            --split train 80 \
            --split test 20 \
            --odir $DATAPATH/wikipedia/ \
-           --stop-words $ROOTPATH/data/stopwords_english.txt \
+           --stop-words $DATAPATH/stopwords_english.txt \
            --cutoff 10 \
-           --corpus wiki
+           --corpus wikien
 
     echo "Done processing Wikipedia corpus"
 fi
@@ -150,21 +169,40 @@ if $WIKIPEDIAES; then
     echo "Preparing Wikipedia in Spanish"    
     mkdir -p $DATAPATH/wikipedia
 
-    #if [ ! -f $DATAPATH/wikipedia/$WIKIDUMPES ]; then
-    #    echo "Downloading Wikipedia dump"
-    #    wget -qO- -O $DATAPATH/wikipedia/$WIKIDUMPES \
-    #         https://dumps.wikimedia.org/eswiki/20151202/$WIKIDUMPES
-    #fi
+    if [ ! -f $DATAPATH/wikipedia/wikies.xml.bz2 ]; then
+        echo "Downloading Wikipedia dump"
+        wget -qO- -O $DATAPATH/wikipedia/wikies.xml.bz2 \
+             $WIKIDUMPES
+    fi
 
+  	if [ ! -f $DATAPATH/wikipedia/wikies.sql.gz ]; then
+        echo "Downloading Wikipedia link"
+        wget -qO- -O $DATAPATH/wikipedia/wikies.sql.gz \
+             $WIKILINKES
+    fi
+
+  	if [ ! -f $DATAPATH/wikipedia/wikies.title.gz ]; then
+        echo "Downloading Wikipedia tittles"
+        wget -qO- -O $DATAPATH/wikipedia/wikies.title.gz \
+             $WIKITITLEES
+    fi
+
+    if [ ! -f $DATAPATH/stopwords_english.txt ]; then
+        echo "Downloading stopwords (english)"
+        wget -qO- -O $DATAPATH/data/stopwords_english.txt \
+             https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
+    fi
+  
     if [ ! -f $DATAPATH/stopwords_spanish.txt ]; then
         echo "Downloading stopwords"
         wget -qO- -O $DATAPATH/stopwords_spanish.txt \
              https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_spanish.txt
+        cat  $DATAPATH/stopwords_english.txt >> $DATAPATH/stopwords_spanish.txt
     fi
     
-    #echo "Uncompressing and parsing Wikipedia dump"
-    #bunzip2 -c $DATAPATH/wikipedia/$WIKIDUMPES \
-    #    | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/eswiki.txt
+    echo "Uncompressing and parsing Wikipedia dump"
+    bunzip2 -c $DATAPATH/wikipedia/wikies.xml.bz2 \
+        | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/eswiki.txt
 
     echo "Genereting BOWs"
     python $ROOTPATH/python/wikipedia/wiki2corpus.py \
@@ -172,7 +210,7 @@ if $WIKIPEDIAES; then
            --split train 80 \
            --split test 20 \
            --odir $DATAPATH/wikipedia/ \
-           --stop-words $ROOTPATH/data/stopwords_spanish.txt \
+           --stop-words $DATAPATH/stopwords_spanish.txt \
            --cutoff 10 \
            --corpus wikies
 

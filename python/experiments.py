@@ -238,6 +238,26 @@ if __name__ == "__main__":
                     ws=[voca[w.item] for w in t]
                     print c,", ".join(ws)
             print "======"
+
+
+
+        print "Total amount of time:",total
+        print "Average coherence  :",sum(vals)/len(vals)
+        print "Maximum coherence  :",max(vals)
+        print "Minimum coherence  :",min(vals)
+        tmp_,co=coherence(m_,corpus_test,topic2corpus,min_coherence=-1)
+        vals=[c for t,c in co]
+        print "Average coherence  full:",sum(vals)/len(vals)
+        print "Maximum coherence  full:",max(vals)
+        print "Minimum coherence  full:",min(vals)
+        print "Zero coherence         :",sum([1 for x in vals if vals==0.0])
+        print "Entropy                :",sum(topics_entropy_sum(m_))
+        print "Entropy normalized     :",sum(topics_entropy_sum(m_))/m_.size()
+        print "Total of topics        :",m_.size()
+
+        co=[(c,t) for t,c in co ]
+        co.sort()
+        co.reverse()
         if opts.topics_pref:
             filename=opts.topics_pref+"r_{0}_l_{1}.topics".format(r,l)
             print "Saving topics to",filename
@@ -247,20 +267,7 @@ if __name__ == "__main__":
                     t=m_.ldb[t]
                     ws=[voca[w.item] for w in t]
                     print >> ft,c,", ".join(ws)
-       
-        print "Total amount of time:",total
-        print "Average coherence  :",sum(vals)/len(vals)
-        print "Maximum coherence  :",max(vals)
-        print "Minimum coherence  :",min(vals)
-        tmp_,co=coherence(m_,corpus_test,topic2corpus,ntop=10,min_coherence=-1)
-        vals=[c for c,t in co]
-        print "Average coherence  :",sum(vals)/len(vals)
-        print "Maximum coherence  :",max(vals)
-        print "Minimum coherence  :",min(vals)
-        print "Zero coherence     :",sum([1 for x in vals if vals==0.0])
-        print "Entropy            :",sum(topics_entropy_sum(m_))
-        print "Entropy normalized :",sum(topics_entropy_sum(m_))/m_.size()
-        print "Total of topics:",m_.size()
+     
 
     if len(cs)==0:
         print "NO TOPICS FOUND"

@@ -29,10 +29,11 @@ import os
 import os.path
 import random
 import re
+import codecs
 random.seed()
 
 from collections import Counter
-punct=re.compile("[a-z']+")
+punct=re.compile("\w+", re.UNICODE)
 
 def line2words(line,sws):
     return [w for w in punct.findall(line.lower()) 
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     doc=Counter()
     idx=[]
     verbose("Extracting articles")
-    for line in open(opts.WIKI):
+    for line in codecs.open(opts.WIKI,encoding="utf-8"):
         if re_header.match(line):
             if opts.max and len(idx)==opts.max:
                 break
@@ -133,14 +134,14 @@ if __name__ == "__main__":
         first_split=opts.splits[0][0]
         for x,y in opts.splits:
             y=int(y)
-            files.append(open(os.path.join(opts.odir,opts.corpus+"."+x+".corpus"),'w'))
-            indixes.append(open(os.path.join(opts.odir,opts.corpus+"."+x+".index"),'w'))
+            files.append(codecs.open(os.path.join(opts.odir,opts.corpus+"."+x+".corpus"),'w',encoding='utf-8'))
+            indixes.append(codecs.open(os.path.join(opts.odir,opts.corpus+"."+x+".index"),'w',encoding='utf-8'))
             splits.append(dict([ (title,(files[-1],x,indixes[-1])) for title in idx[ini:ini+int(y*0.01*len(idx))]]))
             ini+=int(y*0.01*len(idx))
         splits.append(dict([ (title,(files[-1],x,indixes[-1])) for title in idx[ini:]]))
     else:
-        files.append(open(os.path.join(opts.odir,opts.corpus+".corpus"),'w'))
-        indixes.append(open(os.path.join(opts.odir,opts.corpus+".index"),'w'))
+        files.append(codecs.open(os.path.join(opts.odir,opts.corpus+".corpus"),'w',encoding='utf-8'))
+        indixes.append(codecs.open(os.path.join(opts.odir,opts.corpus+".index"),'w',encoding="utf-8"))
         first_split=""
         splits=[dict([(title,(files[-1],"")) for title in idx])]
 
@@ -157,7 +158,7 @@ if __name__ == "__main__":
     if len(opts.splits)<=1:
         vocab=corpus
     else:
-        for line in open(opts.WIKI):
+        for line in codecs.open(opts.WIKI,encoding="utf-8"):
 
             if re_header.match(line):
                 if opts.max and ii==opts.max:
@@ -190,7 +191,7 @@ if __name__ == "__main__":
     ndocs=0
     header=None
     verbose("Creating corpus")
-    for line in open(opts.WIKI):
+    for line in codecs.open(opts.WIKI,encoding="utf-8"):
         if re_header.match(line):
             if opts.max and ii==opts.max:
                 break
@@ -218,8 +219,8 @@ if __name__ == "__main__":
         file.close()
  
     verbose("Creating vocabulary")
-    vocabf=open(os.path.join(opts.odir,opts.corpus+".vocab"),"w")
+    vocabf=codecs.open(os.path.join(opts.odir,opts.corpus+".vocab"),"w",encoding='utf-8')
     for i,(w,n) in enumerate(vocab):
-        print("{0} = {1} = {2}".format(w,i,n),file=vocabf)
+        print(u"{0} = {1} = {2}".format(w,i,n),file=vocabf)
     vocabf.close()
 

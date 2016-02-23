@@ -24,12 +24,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import SpectralClustering
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.datasets import load_digits
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import normalize
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import binarize
 
 verbose = lambda *a: None
 def centers_from_docs_labels(listdb, data):
@@ -99,7 +101,7 @@ def s2l(s,r):
 if __name__ == "__main__":
     import argparse
     p = argparse.ArgumentParser("Mines")
-    p.add_argument("-p","--params",default=[(3,120)],
+    p.add_argument("-p","--params",default=[(3,0.2)],
                 action="append", dest="params",type=float,nargs=2,
                 help="(Size of the tuple, S*| number of tuples)")
     p.add_argument("-l","--number_tuples",default=False,
@@ -152,6 +154,7 @@ if __name__ == "__main__":
     data = digits.data
     #data = 255*data
     data = data.astype(int)
+    #data = binarize(data, threshold=1, copy=True)
 
     n_samples, n_features = data.shape
     n_digits = len(np.unique(digits.target))
@@ -162,8 +165,21 @@ if __name__ == "__main__":
     verbose("n_digits: %d, \t n_samples %d, \t n_features %d"
       % (n_digits, n_samples, n_features))
 
-    bench_k_means(KMeans(init='k-means++', n_clusters=n_digits, n_init=10),
-              name="k-means++", data=data)
+    bench_k_means(KMeans(init='k-means++', n_clusters=10, n_init=10),
+            name="k-means++:10", data=data)
+
+    bench_k_means(KMeans(init='k-means++', n_clusters=20, n_init=10),
+            name="k-means++:20", data=data)
+
+    bench_k_means(MiniBatchKMeans(init='k-means++', n_clusters=10, n_init=10),
+            name="MBk-means++:10", data=data)
+
+    #bench_k_means(KMeans(init='k-means++', n_clusters=20, n_init=10),
+    #        name="k-means++:20", data=data)
+
+    #bench_k_means(KMeans(init='k-means++', n_clusters=100, n_init=10),
+    #        name="k-means++:100", data=data)
+
 
     bench_k_means(KMeans(init='random', n_clusters=n_digits, n_init=10),
               name="random", data=data)
@@ -174,6 +190,7 @@ if __name__ == "__main__":
               data=data)
 
     docs=smh.ndarray_to_listdb(data)
+    
 
     if len(opts.params)>1:
         opts.params.pop(0)
@@ -198,27 +215,30 @@ if __name__ == "__main__":
             print "Cutting off topics..."
             m.cutoff(min=opts.cutoff)
         print "Size of cutted off mined topics:",m.size()
+        m=m.cluster_mhlink(thres=opts.thres,min_cluster_size=opts.min_cluster_size)
+        print "Size of clustered topics:",m.size()
 
         data_=m.toarray()
 
-        kmeans = KMeans(init='k-means++',
-                        n_clusters=n_digits,
-                        n_init=10)
-        kmeans.fit(data_)
+        #kmeans = KMeans(init='k-means++',
+        #                n_clusters=n_digits,
+        #                n_init=10)
+        #kmeans.fit(data_)
         
         # agg = AgglomerativeClustering(n_clusters=n_digits,
         #                               affinity='euclidean',
         #                               linkage='ward')
         # agg.fit(data_)
         
-        # spectral = SpectralClustering(n_clusters=n_digits,
+        #spectral = SpectralClustering(n_clusters=n_digits,
         #                               eigen_solver='amg',
         #                               affinity="nearest_neighbors")        
-        # spectral.fit(data_)
+        #spectral.fit(data_)
 
-        centers=centers_from_docsets_labels(docs, m,  kmeans.labels_)
+        #centers=centers_from_docsets_labels(docs, m,  kmeans.labels_)
         # centers=centers_from_docsets_labels(docs, m,  agg.labels_)
-        # centers=centers_from_docsets_labels(docs, m,  spectral.labels_)
+        #centers=centers_from_docsets_labels(docs, m,  spectral.labels_)
+        centers=centers_from_docsets_labels(docs, m,  range(m.size()))
 
         predictions=[]
         for i, datum in enumerate(data):
@@ -239,7 +259,11 @@ if __name__ == "__main__":
              #                         sample_size=sample_size)))
 
        
-        
+        bench_k_means(KMeans(init='k-means++', n_clusters=n_digits,
+            n_init=m.size()),
+            name="k-means++:"+str(m.size()), data=data)
+
+
        
 
     # in this case the seeding of the centers is deterministic, hence we run the

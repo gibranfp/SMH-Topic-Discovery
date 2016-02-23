@@ -134,36 +134,73 @@ smhcmd weights\
 
 echo "Woking with wiki"
 smhcmd ifindex -w 2\
-    data/wikipedia/wiki.train.corpus\
-    data/wikipedia/wiki.train.bin.ifs
+    data/wikipedia/wikien.train.corpus\
+    data/wikipedia/wikien.train.bin.ifs
 
 smhcmd ifindex\
-    data/wikipedia/wiki.train.corpus\
-    data/wikipedia/wiki.train.tf.ifs
+    data/wikipedia/wikien.train.corpus\
+    data/wikipedia/wikien.train.tf.ifs
 
 smhcmd weights\
-    data/wikipedia/wiki.train.corpus\
-    data/wikipedia/wiki.train.tf.ifs\
-    data/wikipedia/wiki.train.weights
+    data/wikipedia/wikien.train.corpus\
+    data/wikipedia/wikien.train.tf.ifs\
+    data/wikipedia/wikien.train.weights
 
 
 echo "Woking with wiki (100000)"
 python python/cutoffvoca.py --max 100000\
-    data/wikipedia/wiki.vocab\
-    data/wikipedia/wiki.train.corpus\
-    data/wikipedia/wiki100k.vocab\
-    data/wikipedia/wiki100k.train.corpus 
+    data/wikipedia/wikien.vocab\
+    data/wikipedia/wikien.train.corpus\
+    data/wikipedia/wikien100k.vocab\
+    data/wikipedia/wikien100k.train.corpus 
 
 smhcmd ifindex -w 2\
-    data/wikipedia/wiki100k.train.corpus\
-    data/wikipedia/wiki100k.train.bin.ifs
+    data/wikipedia/wikien100k.train.corpus\
+    data/wikipedia/wikien100k.train.bin.ifs
 
 smhcmd ifindex\
-    data/wikipedia/wiki100k.train.corpus\
-    data/wikipedia/wiki100k.train.tf.ifs
+    data/wikipedia/wikien100k.train.corpus\
+    data/wikipedia/wikien100k.train.tf.ifs
 
 smhcmd weights\
-    data/wikipedia/wiki100k.train.corpus\
-    data/wikipedia/wiki100k.train.tf.ifs\
-    data/wikipedia/wiki100k.train.weights
+    data/wikipedia/wikien100k.train.corpus\
+    data/wikipedia/wikien100k.train.tf.ifs\
+    data/wikipedia/wikien100k.train.weights
+
+
+echo "Woking with wiki"
+smhcmd ifindex -w 2\
+    data/wikipedia/wikies.train.corpus\
+    data/wikipedia/wikies.train.bin.ifs
+
+smhcmd ifindex\
+    data/wikipedia/wikies.train.corpus\
+    data/wikipedia/wikies.train.tf.ifs
+
+smhcmd weights\
+    data/wikipedia/wikies.train.corpus\
+    data/wikipedia/wikies.train.tf.ifs\
+    data/wikipedia/wikies.train.weights
+
+
+echo "Woking with wiki (100000)"
+python python/cutoffvoca.py --max 100000\
+    data/wikipedia/wikies.vocab\
+    data/wikipedia/wikies.train.corpus\
+    data/wikipedia/wikies100k.vocab\
+    data/wikipedia/wikies100k.train.corpus 
+
+smhcmd ifindex -w 2\
+    data/wikipedia/wikies100k.train.corpus\
+    data/wikipedia/wikies100k.train.bin.ifs
+
+smhcmd ifindex\
+    data/wikipedia/wikies100k.train.corpus\
+    data/wikipedia/wikies100k.train.tf.ifs
+
+smhcmd weights\
+    data/wikipedia/wikies100k.train.corpus\
+    data/wikipedia/wikies100k.train.tf.ifs\
+    data/wikipedia/wikies100k.train.weights
+
 

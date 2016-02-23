@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 # ----------------------------------------------------------------------
-# Sampled MinHash clustering
+# Sampled-MinHashing clustering
 # ----------------------------------------------------------------------
 # Gibran Fuentes-Pineda, Ivan V. Meza
 # 2015/IIMAS, México

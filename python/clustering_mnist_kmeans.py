@@ -18,6 +18,7 @@ import time
 timestr = time.strftime("%Y%m%d-%H%M%S")
 from time import time
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.datasets import fetch_mldata
 from utils import *
@@ -106,14 +107,20 @@ if __name__ == "__main__":
                 f.write(line)
             f.close()
 
-    corpus_l1lsh = lsh.lsh_load(opts.CORPUS+".freq.corpus",scheme="l1lsh")
-    corpus_l1lsh.ldb.dim=784
+    #corpus_l1lsh = lsh.lsh_load(opts.CORPUS+".freq.corpus",scheme="l1lsh")
+    #corpus_l1lsh.ldb.dim=784
     #corpus_lplsh = lsh.lsh_load(opts.CORPUS+".weight.corpus",scheme="lplsh")
     #corpus_lplsh.vdb.dim=784
 
     verbose("Categories: ",k_size) 
     verbose("Samples   : ",n_samples) 
     verbose("Features  : ",n_features) 
+
+    verbose("Clustering dbscan: ",k_size)
+    dbscan=DBSCAN(metric="l1",eps=100,min_samples=10)
+    dbscan.fit(data)
+    bench_k_means(labels,dbscan.labels_,"db:"+str(k_size),data)
+
 
     verbose("Clustering minibatch: ",k_size)
     mini=MiniBatchKMeans(n_clusters=k_size, init='k-means++',
@@ -122,6 +129,8 @@ if __name__ == "__main__":
     bench_k_means(labels,mini.labels_,"mb:"+str(k_size),data)
 
     verbose("Clustering kmeans: ",k_size)
-    kmeans=MiniBatchKMeans(n_clusters=k_size, init='k-means++')
+    kmeans=KMeans(n_clusters=k_size, init='k-means++')
     kmeans.fit(data)
     bench_k_means(labels,kmeans.labels_,"km:"+str(k_size),data)
+
+

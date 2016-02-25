@@ -140,6 +140,30 @@ if __name__ == "__main__":
                 except KeyError:
                     documents[d]=1
 
+        print "-Total documents",np.sum(sizes)
+        print "-Maximum documents",np.max(sizes)
+        print "-Minimux documents",np.min(sizes)
+        print "-Coverage documents", len(documents)
+
+
+        print "Number of cut off clusters:",clus.size()
+        clus=clus.cluster_mhlink(thres=opts.thres,min_cluster_size=opts.min_cluster_size)
+        print "\nNumber of clusters:",clus.size()
+        if clus.size()<k_size:
+            continue
+        sizes=[]
+        documents={}
+        for c in clus.ldb:
+            sizes.append(c.size)
+            for d in range(c.size):
+                d=c[d].item
+                try:
+                    documents[d]+=1
+                except KeyError:
+                    documents[d]=1
+
+
+
         print "Total documents",np.sum(sizes)
         print "Maximum documents",np.max(sizes)
         print "Minimux documents",np.min(sizes)
@@ -148,13 +172,13 @@ if __name__ == "__main__":
         verbose("Calculating centers")
         centers=centers_from_docsets_labels(corpus_l1lsh, clus,  range(clus.size()))
         verbose("Number of centers: ",len(centers))
-        labels_=predict(centers,data)
+        labels_=predict(centers,datai)
         bench_k_means(labels,labels_,"LSH'(%d,%d)"%(r,l),corpus_l1lsh)
        
         kmeans = KMeans(init='k-means++',                                      
                         n_clusters=k_size,                                   
                         n_init=10)                                             
         kmeans.fit(centers)                                                    
-        predictions=kmeans.predict(data)
+        predictions=kmeans.predict(datai)
         bench_k_means(labels,predictions,"L1LSH-kmeans'(%d,%d)"%(r,l),corpus_l1lsh)
 

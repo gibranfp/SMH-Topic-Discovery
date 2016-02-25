@@ -122,11 +122,29 @@ if __name__ == "__main__":
         
         for norm in ["l2","l1"]:
             print "Clustering topics... LPLSH "+norm
-            clus=corpus_lplsh.mine(r,l,width=3,norm=norm)
+            clus=corpus_lplsh.mine(r,l,width=50,norm=norm)
             print "\nNumber of cluster discovered:",clus.size()
             if opts.cutoff:
                 print "Cutting off topics..."
-                clus.cutoff(min=opts.cutoff)
+                clus.cutoff(min=opts.cutoff,max=10000)
+            if clus.size()<k_size:
+                continue
+            sizes=[]
+            documents={}
+            for c in clus.ldb:
+                sizes.append(c.size)
+                for d in range(c.size):
+                    d=c[d].item
+                    try:
+                        documents[d]+=1
+                    except KeyError:
+                        documents[d]=1
+
+            print "-Total documents",np.sum(sizes)
+            print "-Maximum documents",np.max(sizes)
+            print "-Minimux documents",np.min(sizes)
+            print "-Coverage documents", len(documents)
+
             print "Number of cut off clusters:",clus.size()
             clus=clus.cluster_mhlink(thres=opts.thres,min_cluster_size=opts.min_cluster_size)
             print "\nNumber of clusters:",clus.size()

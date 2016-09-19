@@ -15,7 +15,10 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser("Mines")
     p.add_argument("--max",default=None,type=int,
             action="store", dest="max",
-            help="Maximum vocabulary")
+            help="Top maximum vocabulary")
+    p.add_argument("--min",default=0,type=int,
+            action="store", dest="min",
+            help="Top minimum vocabulary")
     p.add_argument("--voca",default=None,dest="basevoca",
         action="store", help="Vocabulary file to cut off from")
     p.add_argument("voca",default=None,
@@ -39,25 +42,39 @@ if __name__ == "__main__":
         bits=line.strip().split()
         fullvoca.append((int(bits[4]),line))
 
-    fullvoca.sort()
-    fullvoca.reverse()
+    #fullvoca.sort()
+    #fullvoca.reverse()
     voca={}
     nvoca=open(opts.nvoca,'w')
     i=0;
+    S=False
+    max=0
     for s,line in fullvoca:
-        if opts.max and i>= opts.max:
-            break
         bits=line.strip().split()
-        idd=int(bits[2])
-        if f2b and not f2b.has_key(idd):
-            continue
-        print >> nvoca, line.strip()
-        voca[int(bits[2])]=True
+        if s>max:
+            i=0
+        max=s
+        if not i%10000:
+            print '.',
+        if opts.max and i>= opts.min and  i < opts.max:
+            S=True
+        elif not opts.max and i>= opts.min:
+            S=True
+        else:
+            S=False
+        if S:
+            idd=int(bits[2])
+            if f2b and not f2b.has_key(idd):
+                continue
+            print >> nvoca, line.strip()
+            voca[int(bits[2])]=True
         i+=1
     nvoca.close()
-
+    print  ""
     ncorpus=open(opts.ncorpus,'w')
     for i,line in enumerate(open(opts.corpus)):
+        if not i%100:
+            print '.',
         bits=line.strip().split()
         bits_=[]
         for bit in bits[1:]:

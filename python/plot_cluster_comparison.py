@@ -46,7 +46,7 @@ noisy_moons = datasets.make_moons(n_samples=n_samples, noise=.05)
 blobs = datasets.make_blobs(n_samples=n_samples, random_state=8)
 no_structure = np.random.rand(n_samples, 2), None
 
-colors = np.array([x for x in 'bgrcmykbgrcmykbgrcmykbgrcmyk'])
+colors = np.array([x for x in 'bgrcmyk'*100])
 colors = np.hstack([colors] * 20)
 
 clustering_names = [
@@ -63,7 +63,7 @@ plt.subplots_adjust(left=.02, right=.98, bottom=.001, top=.96, wspace=.05,
 plot_num = 1
 
 datasets = [noisy_circles, noisy_moons, blobs, no_structure]
-for i_dataset, dataset in enumerate(datasets[:1]):
+for i_dataset, dataset in enumerate(datasets):
     X, y = dataset
     # normalize dataset for easier parameter selection
     X = StandardScaler().fit_transform(X)
@@ -97,7 +97,8 @@ for i_dataset, dataset in enumerate(datasets[:1]):
         two_means, affinity_propagation, ms, spectral, ward, average_linkage,
         dbscan, birch]
 
-    for name, algorithm in zip(clustering_names, clustering_algorithms)[:2]:
+    for name, algorithm in zip(clustering_names, clustering_algorithms):
+        print "Dataset",i_dataset,name
         # predict cluster memberships
         if not name.startswith("LSH"):
             t0 = time.time()
@@ -109,7 +110,10 @@ for i_dataset, dataset in enumerate(datasets[:1]):
                 y_pred = algorithm.predict(X)
         else:
             t0 = time.time()
-            datai = (X*1000000).astype(int)
+            min=-np.amin(X,axis=0)+10
+            val=np.add(X,min)
+            val=np.clip(val,0,1000)
+            datai = (val*10000).astype(int)
             f=tempfile.NamedTemporaryFile()
             for datum in datai:
                 datum=["{0}:{1}".format(i,int(x))
@@ -119,9 +123,28 @@ for i_dataset, dataset in enumerate(datasets[:1]):
             corpus = lsh.lsh_load(f.name,scheme="l1lsh")
             f.close()
             max_freq=np.amax(datai)
-            clus=corpus.mine(10,100,int(max_freq))
-            #clus=clus.cluster_mhlink()
+            clus=corpus.mine(100,10000,int(max_freq))
+            clus.cutoff(min=10,max=100)
             t1 = time.time()
+            sizes=[]
+            documents={}
+            for c in clus.ldb:
+                sizes.append(c.size)
+                for d in range(c.size):
+                    d=c[d].item
+                    try:
+                        documents[d]+=1
+                    except KeyError:
+                        documents[d]=1
+            
+
+            #clus=clus.cluster_mhlink(thres=0.1,min_cluster_size=1)
+            print "-Total documents",np.sum(sizes)
+            print "-Maximum documents",np.max(sizes)
+            print "-Minimux documents",np.min(sizes)
+            print "-Coverage documents", len(documents)
+            print "-Number of clusters",clus.size()
+
             centers=centers_from_docsets_labels(corpus, clus,  range(clus.size()))
             print len(centers)
             y_pred=predict(centers,datai)
@@ -141,6 +164,14 @@ for i_dataset, dataset in enumerate(datasets[:1]):
             center_colors = colors[:len(centers)]
 
             plt.scatter(centers[:, 0], centers[:, 1], s=100, c=center_colors)
+        else:
+            if name.startswith("LSH"):
+                centers=(centers*1.0/10000)-min
+                print centers
+                center_colors = colors[:len(centers)]
+                plt.scatter(centers[:, 0], centers[:, 1], s=100, c=center_colors)
+
+
         plt.xlim(-2, 2)
         plt.ylim(-2, 2)
         plt.xticks(())

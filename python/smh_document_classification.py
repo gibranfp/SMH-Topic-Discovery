@@ -30,10 +30,16 @@ import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.datasets import fetch_20newsgroups
+from smh_classifier import SMHClassifier
 
 # vocabulary sizes to evaluate
 # vocabulary_sizes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
 vocabulary_sizes = [100, 200]
+
+configurations = ((CountVectorizer(max_df=0.95, min_df=2,
+                                   stop_words='english'),
+                   SMHClassifier(),
+                   "SMH (s=0.15)"))
 
 def kfold_cv(data, target, k = 10):
     """
@@ -82,7 +88,7 @@ def evaluate_model(model, vectorizer, data, target, k = 10):
 
 def plot_classification_accuracies(show_flag, path_to_save):
     """
-    Evaluates NMF, Online LDA and SMH in document classification and plots the performances
+    Evaluates SMH in document classification and plots the performances
     """
     print "Loading dataset"
     dataset = fetch_20newsgroups(subset='all', remove=('headers', 'footers', 'quotes'))

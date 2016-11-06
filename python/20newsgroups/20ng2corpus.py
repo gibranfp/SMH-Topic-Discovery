@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 #
-# Gibran Fuentes Pineda <gibranfp@turing.iimas.unam.mx>
+# Gibran Fuentes-Pineda <gibranfp@unam.mx>
 # IIMAS, UNAM
-# 2015
+# 2016
 #
 # -------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
@@ -22,8 +22,10 @@
 """
 Functions to fetch and store the 20newsgroup dataset in corpus format.
 """
+import argparse
 import itertools
 import sys
+from operator import itemgetter
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import CountVectorizer
 
@@ -50,19 +52,17 @@ def save_vocabulary_to_file(filename, corpus_list, corpus_counter):
     --
     termN = id2 = number_of_times_termN_occurs number_of_documents_where_termN_occurs
     """
-    words = corpus_counter.vocabulary_.keys()
-    ids = corpus_counter.vocabulary_.values()
-    docfreq = [0] * len(words)
-    corpfreq = [0] * len(words)
-    for i in range(len(corpus_list)):
-        for id,freq in corpus_list[i]:
+    vocabulary = sorted(corpus_counter.vocabulary_.items(), key=itemgetter(1))
+    docfreq = [0] * len(vocabulary)
+    corpfreq = [0] * len(vocabulary)
+    for l in corpus_list:
+        for id,freq in l:
             docfreq[id] += 1
             corpfreq[id] += freq
 
-    ids, corpfreq, docfreq, words = zip(*sorted(zip(ids, corpfreq, docfreq, words), reverse=True))
     with open(filename, 'w') as f:
-        for i in range(len(words)):
-            line = words[i] + ' = ' + str(ids[i]) + ' = ' + str(corpfreq[i])  + ' ' + str(docfreq[i]) + '\n'
+        for (word, id) in vocabulary:
+            line = word + ' = ' + str(id) + ' = ' + str(corpfreq[id])  + ' ' + str(docfreq[id]) + '\n'
             f.write(line.encode('utf8'))
     f.close()
 
@@ -80,60 +80,60 @@ def load_vocabulary(vocpath):
     Loads vocabulary from a file
     """
     with open(vocpath, 'r') as f:
-        vocabulary = f.read().splitlines() 
+        vocabulary = f.read().splitlines()
 
     return vocabulary
 
-
-categories = [
-    'alt.atheism',
-    'comp.graphics',
-    'comp.os.ms-windows.misc',
-    'comp.sys.ibm.pc.hardware',
-    'comp.sys.mac.hardware',
-    'comp.windows.x',
-    'misc.forsale',
-    'rec.autos',
-    'rec.motorcycles',
-    'rec.sport.baseball',
-    'rec.sport.hockey',
-    'sci.crypt',
-     'sci.electronics',
-     'sci.med',
-     'sci.space',
-     'soc.religion.christian',
-     'talk.politics.guns',
-     'talk.politics.mideast',
-     'talk.politics.misc',
-     'talk.religion.misc'       
-]
-# Uncomment the following to do the analysis on all the categories
-#categories = None
-
-
-
-
-def main(dirpath, vocpath):
+def fetch_and_save(dirpath, vocpath):
+    """
+    Fetches the 20 newsgroups corpus, vectorized the documents, stores them in
+    a database of lists and saves it to file.
+    """
     # Loading data
-    train_newsgroups = fetch_20newsgroups(subset='train', categories=categories,
-         remove=('headers','footers', 'quotes'),
-        shuffle=True, random_state=42)
+    newsgroups_dataset = fetch_20newsgroups(subset='all',
+                                            remove=('headers','footers', 'quotes'),
+                                            random_state=123)
 
-    vocabulary = load_vocabulary(vocpath)
-    train_counter = CountVectorizer(stop_words='english', min_df=5)
-    #train_counter = CountVectorizer(stop_words='english', vocabulary=vocabulary, min_df=5)
-    train_mat = train_counter.fit_transform(train_newsgroups.data)
-    train_mat.sort_indices()
+    # uses a predefined vocabulary list if available
+    if vocpath:
+        vocabulary = load_vocabulary(vocpath)
+        newsgroups_counter = CountVectorizer(vocabulary=vocabulary, max_df=0.95, min_df=5)
+    else:
+        newsgroups_counter = CountVectorizer(stop_words='english', max_df=0.95, min_df=5)
 
-    num_of_docs, vocab_size = train_mat.shape
-    train_list = [[] for i in xrange(num_of_docs)]
-    train_coo = train_mat.tocoo()    
-    for i,j,v in itertools.izip(train_coo.row, train_coo.col, train_coo.data):
-        train_list[i].append([j,v])
+    # generates csr matrix with the vectors of term frequencies
+    newsgroups_mat = newsgroups_counter.fit_transform(newsgroups_dataset.data)
+    
+    # converts csr matrix to a database of lists
+    num_of_docs, vocab_size = newsgroups_mat.shape
+    newsgroups_list = [[] for i in xrange(num_of_docs)]
+    newsgroups_coo = newsgroups_mat.tocoo()    
+    for i,j,v in itertools.izip(newsgroups_coo.row, newsgroups_coo.col, newsgroups_coo.data):
+        newsgroups_list[i].append([j,v])
 
-    save_corpus_to_file(dirpath + '/20ng.train.corpus', train_list)
-    save_vocabulary_to_file(dirpath + '/20ng.train.voca', train_list,train_counter)
-    save_idx_to_file(dirpath + '/20ng.train.idx', train_newsgroups)
+    # saves corpus, vocabulary and indices
+    save_corpus_to_file(dirpath + '/newsgroups.corpus', newsgroups_list)
+    save_vocabulary_to_file(dirpath + '/newsgroups.voca', newsgroups_list, newsgroups_counter)
+    save_idx_to_file(dirpath + '/newsgroups.idx', newsgroups_dataset)
+
+def main():
+    """
+    Main function
+    """
+    try:
+        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(
+            description="Downloads, preprocess and saves 20 newsgroups corpus")
+        parser.add_argument("-d", "--dir", type=str, default='./',
+                            help="directory where the corpus is to be saved (default = cwd)")
+        parser.add_argument("-v", "--vocabulary", type=str, default=None,
+                            help="file where to save the figure")
+        args = parser.parse_args()
+        fetch_and_save(args.dir, args.vocabulary)
+            
+    except SystemExit:
+        print "for help use --help"
+        sys.exit(2)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main()

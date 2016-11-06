@@ -7,7 +7,7 @@ ROOTPATH=`pwd`
 THIRDPARTYPATH=$ROOTPATH/3rdParty
 DATAPATH=$ROOTPATH/data
 mkdir -p $DATAPATH
-WIKIDUMPEN="http://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-pages-articles.xml.bz2"
+WIKIDUMPEN="http://dumps.wikimedia.org/enwiki/20161101/enwiki-20161101-pages-articles.xml.bz2"
 WIKIDUMPES="http://dumps.wikimedia.org/eswiki/20160203/eswiki-20160203-pages-articles.xml.bz2"
 WIKILINKEN="http://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-langlinks.sql.gz"
 WIKITITLEEN="https://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-page_props.sql.gz"
@@ -17,6 +17,7 @@ WIKITITLEES="http://dumps.wikimedia.org/eswiki/20160203/eswiki-20160203-page_pro
 NIPS=false
 REUTERS=false
 TWENTYNG=false
+WIKIPEDIA=false
 WIKIPEDIAEN=false
 WIKIPEDIAES=false
 WIKI2TEXT=false
@@ -42,7 +43,7 @@ while getopts ":abcnrtwe" opt; do
             TWENTYNG=true
         ;;
         w)
-            WIKIPEDIAEN=true
+            WIKIPEDIA=true
         ;;
         e)
             WIKIPEDIAES=true
@@ -72,10 +73,15 @@ if $REUTERS; then
     read REUTERSV1PATH
     echo -n "Enter path of Reuters dataset English Vol 2: "
     read REUTERSV2PATH
+    if [ ! -f $DATAPATH/stopwords_english.txt ]; then
+        echo "Downloading stopwords"
+        wget -qO- -O $DATAPATH/stopwords_english.txt \
+             https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
+    fi
     echo "Preprocessing and generating BOWs"
     python python/reuters/docs2tfdocs.py \
            --split train 100 \
-           --stop-words data/english.stop \
+           --stop-words $DATAPATH//stopwords_english.txt \
            -p 6 -v \
            --odir $DATAPATH/reuters ${REUTERSV1PATH}
     echo "Done processing Reuters corpus"
@@ -84,12 +90,13 @@ fi
 if $TWENTYNG; then
     echo "Preparing 20 newsgroups corpus"
     mkdir -p $DATAPATH/20newsgroups
-    echo "Downloading vocabulary"
-    wget -qO- -O $DATAPATH/20newsgroups/vocabulary.txt \
-         http://qwone.com/~jason/20Newsgroups/vocabulary.txt
+    if [ ! -f $DATAPATH/20newsgroups/vocabulary.txt ]; then
+        echo "Downloading vocabulary"
+        wget -qO- -O $DATAPATH/20newsgroups/vocabulary.txt \
+             http://qwone.com/~jason/20Newsgroups/vocabulary.txt
+    fi
     echo "Downloading, preprocessing and generating BOWs"
-    python python/20newsgroups/20ng2corpus.py data/20newsgroups \
-           $DATAPATH/20newsgroups/vocabulary.txt
+    python python/20newsgroups/20ng2corpus.py -v $DATAPATH/20newsgroups/vocabulary.txt -d $DATAPATH/20newsgroups
     echo "Done processing 20 newsgroups corpus"
 fi
 
@@ -115,6 +122,39 @@ if $WIKI2TEXT; then
     git clone https://github.com/rspeer/wiki2text.git $THIRDPARTYPATH/wiki2text
     cd $THIRDPARTYPATH/wiki2text
     make
+fi
+
+if $WIKIPEDIA; then
+    echo "Preparing Wikipedia"    
+    mkdir -p $DATAPATH/wikipedia
+
+    if [ ! -f $DATAPATH/wikipedia/wikien.xml.bz2 ]; then
+        echo "Downloading Wikipedia dump"
+        wget -qO- -O $DATAPATH/wikipedia/wikien.xml.bz2 \
+             $WIKIDUMPEN
+    fi
+
+    if [ ! -f $DATAPATH/stopwords_english.txt ]; then
+        echo "Downloading stopwords"
+        wget -qO- -O $DATAPATH/stopwords_english.txt \
+             https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
+    fi
+    
+    echo "Uncompressing and parsing Wikipedia dump"
+    bunzip2 -c $DATAPATH/wikipedia/wikien.xml.bz2 \
+        | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
+
+    echo "Genereting BOWs"
+    python $ROOTPATH/python/wikipedia/wiki2corpus.py \
+           $DATAPATH/wikipedia/enwiki.txt \
+           --split train 80 \
+           --split test 20 \
+           --odir $DATAPATH/wikipedia/ \
+           --stop-words $DATAPATH/stopwords_english.txt \
+           --cutoff 10 \
+           --corpus wikien
+
+    echo "Done processing Wikipedia corpus"
 fi
 
 if $WIKIPEDIAEN; then
@@ -144,7 +184,7 @@ if $WIKIPEDIAEN; then
 
     if [ ! -f $DATAPATH/stopwords_english.txt ]; then
         echo "Downloading stopwords"
-        wget -qO- -O $DATAPATH/data/stopwords_english.txt \
+        wget -qO- -O $DATAPATH/stopwords_english.txt \
              https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
     fi
     
@@ -187,12 +227,6 @@ if $WIKIPEDIAES; then
              $WIKITITLEES
     fi
 
-    if [ ! -f $DATAPATH/stopwords_english.txt ]; then
-        echo "Downloading stopwords (english)"
-        wget -qO- -O $DATAPATH/data/stopwords_english.txt \
-             https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
-    fi
-  
     if [ ! -f $DATAPATH/stopwords_spanish.txt ]; then
         echo "Downloading stopwords"
         wget -qO- -O $DATAPATH/stopwords_spanish.txt \

@@ -44,7 +44,7 @@ def save_corpus_to_file(filename, corpus_list):
             f.write(line)
     f.close()
 
-def save_vocabulary_to_file(filename, corpus_list, corpus_counter):
+def save_vocabulary_to_file(filename, corpus_list, corpus_counter, min_df = 6):
     """
     Saves vocabulary into a file in the following format:
     term1 = id1 = number_of_times_term1_occurs number_of_documents_where_term1_occurs
@@ -59,10 +59,14 @@ def save_vocabulary_to_file(filename, corpus_list, corpus_counter):
         for id,freq in l:
             docfreq[id] += 1
             corpfreq[id] += freq
+            
+    less_frequent_ids = [i for i, df in enumerate(docfreq) if df < min_df]
+    more_frequent_terms = [[term, corpfreq[id], docfreq[id]] for (term, id) in vocabulary if id not in less_frequent_ids]
+    more_frequent_terms = sorted(more_frequent_terms, key=itemgetter(2), reverse=True)
 
     with open(filename, 'w') as f:
-        for (word, id) in vocabulary:
-            line = word + ' = ' + str(id) + ' = ' + str(corpfreq[id])  + ' ' + str(docfreq[id]) + '\n'
+        for i, [term, corpfreq, docfreq] in enumerate(more_frequent_terms):
+            line = term + ' = ' + str(i) + ' = ' + str(corpfreq)  + ' ' + str(docfreq) + '\n'
             f.write(line.encode('utf8'))
     f.close()
 
@@ -84,7 +88,7 @@ def load_vocabulary(vocpath):
 
     return vocabulary
 
-def fetch_and_save(dirpath, vocpath):
+def fetch_and_save(dirpath, vocpath, min_df = 6):
     """
     Fetches the 20 newsgroups corpus, vectorized the documents, stores them in
     a database of lists and saves it to file.
@@ -97,9 +101,9 @@ def fetch_and_save(dirpath, vocpath):
     # uses a predefined vocabulary list if available
     if vocpath:
         vocabulary = load_vocabulary(vocpath)
-        newsgroups_counter = CountVectorizer(vocabulary=vocabulary, max_df=0.95, min_df=5)
+        newsgroups_counter = CountVectorizer(stop_words='english', vocabulary=vocabulary, min_df=min_df)
     else:
-        newsgroups_counter = CountVectorizer(stop_words='english', max_df=0.95, min_df=5)
+        newsgroups_counter = CountVectorizer(stop_words='english', min_df=min_df)
 
     # generates csr matrix with the vectors of term frequencies
     newsgroups_mat = newsgroups_counter.fit_transform(newsgroups_dataset.data)
@@ -112,9 +116,9 @@ def fetch_and_save(dirpath, vocpath):
         newsgroups_list[i].append([j,v])
 
     # saves corpus, vocabulary and indices
-    save_corpus_to_file(dirpath + '/newsgroups.corpus', newsgroups_list)
-    save_vocabulary_to_file(dirpath + '/newsgroups.voca', newsgroups_list, newsgroups_counter)
-    save_idx_to_file(dirpath + '/newsgroups.idx', newsgroups_dataset)
+    save_corpus_to_file(dirpath + '/20newsgroups.corpus', newsgroups_list)
+    save_vocabulary_to_file(dirpath + '/20newsgroups.vocab', newsgroups_list, newsgroups_counter)
+    save_idx_to_file(dirpath + '/20newsgroups.idx', newsgroups_dataset)
 
 def main():
     """
@@ -124,12 +128,14 @@ def main():
         parser = argparse.ArgumentParser()
         parser = argparse.ArgumentParser(
             description="Downloads, preprocess and saves 20 newsgroups corpus")
+        parser.add_argument("-m", "--min", type=int, default=6,
+                            help="Minimum document frequency for each term")
         parser.add_argument("-d", "--dir", type=str, default='./',
                             help="directory where the corpus is to be saved (default = cwd)")
         parser.add_argument("-v", "--vocabulary", type=str, default=None,
                             help="file where to save the figure")
         args = parser.parse_args()
-        fetch_and_save(args.dir, args.vocabulary)
+        fetch_and_save(args.dir, args.vocabulary, args.min)
             
     except SystemExit:
         print "for help use --help"

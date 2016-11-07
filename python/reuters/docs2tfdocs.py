@@ -198,9 +198,9 @@ if __name__ == "__main__":
 
         # Saving voca
         if opts.odir:
-            vocafile=open("{0}/{1}{2}.voca".format(opts.odir,opts.corpus,name),"w")
+            vocafile=open("{0}/{1}{2}.vocab".format(opts.odir,opts.corpus,name),"w")
         else:
-            vocafile=open("{0}{1}.voca".format(opts.corpus,name),"w")
+            vocafile=open("{0}{1}.vocab".format(opts.corpus,name),"w")
 
 
         # Printing voca files

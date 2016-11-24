@@ -7,7 +7,7 @@
 # 2015/IIMAS, México
 # ----------------------------------------------------------------------
 
-from  eval import utils
+import utils
 
 # MAIN program
 if __name__ == "__main__":

@@ -30,50 +30,93 @@ from smh.smh import ndarray_to_listdb, csr_to_listdb
 from smh.smh import SMH
 from scipy.sparse.csr import csr_matrix
 from numpy import ndarray
+from math import log, pow
 
 def array_to_listdb(X):
-    # if type(X) is csr_matrix:
-    #     listdb = SMH(ldb=csr_to_listdb(X.T))
-    # elif type(X) is ndarray:
-    #     listdb = SMH(ldb=ndarray_to_listdb(X.T))
-    # else:
-    #     raise Exception('Invalid array type')
-    return csr_to_listdb(X.T)
+    """
+    Converts array (CSR or ndarray) to a dabase of lists
+    """
+    if type(X) is csr_matrix:
+        listdb = csr_to_listdb(X.T)
+    elif type(X) is ndarray:
+        listdb = ndarray_to_listdb(X.T)
+    else:
+        raise Exception('Invalid array type')
+
+    return listdb
 
 class SMHClassifier(BaseEstimator):
     """
     SMH-based classifier.
     """
-    def __init__(self, tuple_size = 3, n_tuples = 692, wcc = None, ovr_thres = 0.7):
+    def __init__(self, tuple_size=3, n_tuples=692,
+                 wcc=None, ovr_thres=0.7):
         self.tuple_size = tuple_size
-        self.n_tuples = n_tuples
 
         if wcc:
             self.wcc = wcc
-            self.n_tuples = ntuples
+            self.n_tuples = log(0.5) / log(1.0 - pow(wcc, tuple_size))
+        else:
+            self.n_tuples = n_tuples
 
-    def discover_topics(self,X,tuple_size=3,ntuples=692,weights=None,expand=False,thres=0.7,cutoff=5):
+    def discover_topics(self, X, tuple_size=3, n_tuples=692,
+                        weights=True, expand=True,
+                        thres=0.7, cutoff=3):
+        """
+        Discovers topics from a text corpus.
+        """
         ifs = array_to_listdb(X)
         mined = ifs.mine(tuple_size=tuple_size,
-                             num_tuples=ntuples,
-                             weights=weights,
-                             expand=expand)
+                         num_tuples=n_tuples,
+                         weights=weights,
+                         expand=expand)
         mined.cutoff(min=cutoff)
-        models = mined.cluster_mhlink(thres=thres, tuple_size=3, n_tuples=10)
-        
-        return SparseCoder(dictionary=normalize(models.toarray()))
+        models = mined.cluster_mhlink(thres=thres)
+    
+        return models
 
-    def fit(self,X,tuple_size=3,ntuples=10,weights=None,expand=False,thres=0.7,cutoff=5):
-        self.coder = self.discover_topics(X,
-                                          tuple_size=tuple_size,
-                                          ntuples=ntuples,
-                                          weights=weights,
-                                          expand=expand,
-                                          thres=thres,
-                                          cutoff=cutoff)
+    def fit(self, X, tuple_size=3, n_tuples=692,
+            weights=True, expand=True,
+            thres=0.7, cutoff=3):
+        """
+        Discovers topics and used them as a dictionary for sparse-coding.
+        """
+        models = self.discover_topics(X,
+                                      tuple_size=tuple_size,
+                                      n_tuples=n_tuples,
+                                      weights=weights,
+                                      expand=expand,
+                                      thres=thres,
+                                      cutoff=cutoff)
+        self.coder = SparseCoder(dictionary=normalize(models.toarray()),
+                                 transform_algorithm='lasso_lars',
+                                 split_sign=True,
+                                 n_jobs=4)
         
+    def fit_transform(self, X, tuple_size=3, n_tuples=692,
+                      weights=None, expand=None,
+                      thres=0.7, cutoff=3):
+        """
+        Discovers topics and used them as a dictionary to sparse-code
+        the documents.
+        """
+        self.fit(X, tuple_size=tuple_size, n_tuples=n_tuples, weights=weights, expand=expand,
+                 thres=thres, cutoff=cutoff)
+        return self.coder.fit_transform(X.todense())
+
+    
     def transform(self, X):
-        return self.coder.transform(X)
+        """
+        Sparse-code a given set of documents from the
+        discovered topics.
+        """
+        return self.coder.transform(X.todense())
+
+
+
+
+
+
 
 
 

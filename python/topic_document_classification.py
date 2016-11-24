@@ -26,80 +26,93 @@ NMF, Online LDA and SMH topics.
 import argparse
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
 from sklearn.svm import LinearSVC
 from sklearn.datasets import fetch_20newsgroups
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+# maximum and minimum document frequency of a term
+max_df = 0.95
+min_df = 2
 
 # vocabulary sizes to evaluate
-# vocabulary_sizes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
-vocabulary_sizes = [100, 200]
-
-configurations = ((TfidfVectorizer(max_df=0.95, min_df=2,
-                                   stop_words='english'),
-                   NMF(n_components=10, 
-                       alpha=.1, l1_ratio=.5,
-                       random_state=0),
-                   "NMF (10 topics)"),
-                  (TfidfVectorizer(max_df=0.95, min_df=2,
-                                   stop_words='english'),
-                   NMF(n_components=20,
-                       alpha=.1, l1_ratio=.5,
-                       random_state=0),
-                   "NMF (20 topics)"))
+vocabulary_sizes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
 
 # Topic discovery configurations to evaluate
-configurations2 = ((TfidfVectorizer(max_df=0.95, min_df=2,
+configurations = ((TfidfVectorizer(max_df=max_df,
+                                   min_df=min_df,
                                    stop_words='english'),
                    NMF(n_components=100, 
-                       alpha=.1, l1_ratio=.5,
+                       alpha=.1,
+                       l1_ratio=.5,
                        random_state=0),
                    "NMF (100 topics)"),
-                  (TfidfVectorizer(max_df=0.95, min_df=2,
+                  (TfidfVectorizer(max_df=max_df,
+                                   min_df=min_df,
                                    stop_words='english'),
                    NMF(n_components=200,
-                       alpha=.1, l1_ratio=.5,
+                       alpha=.1,
+                       l1_ratio=.5,
                        random_state=0),
                    "NMF (200 topics)"),
-                  (TfidfVectorizer(max_df=0.95, min_df=2,
+                  (TfidfVectorizer(max_df=max_df,
+                                   min_df=min_df,
                                    stop_words='english'),
                    NMF(n_components=300,
-                       alpha=.1, l1_ratio=.5,
+                       alpha=.1,
+                       l1_ratio=.5,
                        random_state=0),
                    "NMF (300 topics)"),
-                  (TfidfVectorizer(max_df=0.95, min_df=2,
+                  (TfidfVectorizer(max_df=max_df,
+                                   min_df=min_df,
                                    stop_words='english'),
                    NMF(n_components=400,
-                       alpha=.1, l1_ratio=.5,
+                       alpha=.1,
+                       l1_ratio=.5,
                        random_state=0),
                    "NMF (400 topics)"),
-                  (CountVectorizer(max_df=0.95, min_df=2,
+                  (CountVectorizer(max_df=max_df,
+                                   min_df=min_df,
                                    stop_words='english'),
-                   LatentDirichletAllocation(n_topics=100, max_iter=5,
-                                  learning_method='online',
-                                  learning_offset=50.,
-                                  random_state=0),
-                   "Online LDA (100 topics)"),
-                  (CountVectorizer(max_df=0.95, min_df=2,
-                                   stop_words='english'),
-                   LatentDirichletAllocation(n_topics=200, max_iter=5,
+                   LatentDirichletAllocation(n_topics=100,
+                                             max_iter=5,
                                              learning_method='online',
-                                             learning_offset=50.,
+                                             batch_size=4096,
+                                             learning_decay=0.5,
+                                             learning_offset=64,
+                                             random_state=0),
+                   "Online LDA (100 topics)"),
+                  (CountVectorizer(max_df=max_df,
+                                   min_df=min_df,
+                                   stop_words='english'),
+                   LatentDirichletAllocation(n_topics=200,
+                                             learning_method='online',
+                                             batch_size=4096,
+                                             learning_decay=0.5,
+                                             learning_offset=64,
                                              random_state=0),
                    "Online LDA (200 topics)"),
-                  (CountVectorizer(max_df=0.95, min_df=2,
+                  (CountVectorizer(max_df=max_df,
+                                   min_df=min_df,
                                    stop_words='english'),
-                   LatentDirichletAllocation(n_topics=300, max_iter=5,
+                   LatentDirichletAllocation(n_topics=300,
                                              learning_method='online',
-                                             learning_offset=50.,
+                                             batch_size=4096,
+                                             learning_decay=0.5,
+                                             learning_offset=64,
                                              random_state=0),
                    "Online LDA (300 topics)"),
-                  (CountVectorizer(max_df=0.95, min_df=2,
+                  (CountVectorizer(max_df=max_df,
+                                   min_df=min_df,
                                    stop_words='english'),
-                   LatentDirichletAllocation(n_topics=400, max_iter=5,
+                   LatentDirichletAllocation(n_topics=400,
                                              learning_method='online',
-                                             learning_offset=50.,
+                                             batch_size=4096,
+                                             learning_decay=0.5,
+                                             learning_offset=64,
                                              random_state=0),
                    "Online LDA (400 topics)"))
 
@@ -136,60 +149,45 @@ def evaluate_model(model, vectorizer, data, target, k = 10):
         X_train = vectorizer.fit_transform(data_train)
         X_valid = vectorizer.transform(data_valid)
         
-        model.fit(X_train)
-
-        topic_rep_train = model.transform(X_train)
+        topic_rep_train = model.fit_transform(X_train)
         topic_rep_valid = model.transform(X_valid)
 
         lsvc = LinearSVC()
         lsvc.fit(topic_rep_train, target_train)
         accuracy[i] = lsvc.score(topic_rep_valid, target_valid)
 
+        print "Fold ", i, "train data size =", X_train.shape, "validation data size = ", X_valid.shape, "accuracy = ", accuracy[i]
+        
     return accuracy.mean()
 
-
-def plot_classification_accuracies(show_flag, path_to_save):
-    """
-    Evaluates NMF, Online LDA and SMH in document classification and plots the performances
-    """
+def evaluate_vocabulary_sizes(vectorizer, model, name):
     print "Loading dataset"
     dataset = fetch_20newsgroups(subset='all', remove=('headers', 'footers', 'quotes'))
 
-    fig = plt.figure(1, figsize=(9, 6))
-    ax = fig.add_subplot(111)
+    print "Evaluating ", name
+    accuracy = np.zeros(len(vocabulary_sizes))
+    for i,nf in enumerate(vocabulary_sizes):
+        print "Vocabulary size = ", nf
+        vectorizer.set_params(max_features=nf)
+        accuracy[i] = evaluate_model(model, vectorizer, dataset.data, dataset.target)
 
-    print "Evaluating topic discovery methods"
-    for vectorizer,model,name in configurations:
-        print "Evaluating", name
-        accuracy = np.zeros(len(vocabulary_sizes))
-        for i,nf in enumerate(vocabulary_sizes):
-            vectorizer.set_params(max_features=nf)
-            accuracy[i] = evaluate_model(model, vectorizer, dataset.data, dataset.target)
-        ax.plot(vocabulary_sizes, accuracy, label=name)
-
-    ax.legend()
-    plt.ylabel("Accuracy")
-    plt.xlabel("Vocabulary size")
-
-    if show_flag:
-        plt.show()
-
-    if path_to_save:
-        plt.savefig(path_to_save)
+    return accuracy
 
 def main():
     try:
         parser = argparse.ArgumentParser()
         parser = argparse.ArgumentParser(
         description="Evaluates NMF, Online LDA and SMH in document classification and plots the performances")
-        parser.add_argument('-s', '--show_flag', action='store_true',
-                            help="show figure")
         parser.set_defaults(fig=False)
         parser.add_argument("-p", "--path_to_save", type=str, default=None,
-                            help="file where to save the figure")
+                            help="file where to save the accuracies")
+        parser.add_argument("-c", "--config", type=int, default=0,
+                            help="Configuration number to try")
         args = parser.parse_args()
-
-        plot_classification_accuracies(args.show_flag, args.path_to_save)
+        accuracy = evaluate_vocabulary_sizes(configurations[args.config][0], configurations[args.config][1], configurations[args.config][2])
+        if args.path_to_save:
+            print "Saving accuracies in", args.path_to_save
+            np.savetxt(args.path_to_save, accuracy)
         
     except SystemExit:
         print "for help use --help"

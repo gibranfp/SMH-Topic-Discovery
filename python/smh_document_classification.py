@@ -26,20 +26,36 @@ SMH topics.
 import argparse
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.datasets import fetch_20newsgroups
 from smh_classifier import SMHClassifier
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 # vocabulary sizes to evaluate
-# vocabulary_sizes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
-vocabulary_sizes = [100, 200]
-
-configurations = ((CountVectorizer(max_df=0.95, min_df=2,
+vocabulary_sizes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+configurations = ((CountVectorizer(max_df=0.9, min_df=5,
                                    stop_words='english'),
-                   SMHClassifier(),
-                   "SMH (s=0.15)"))
+                   SMHClassifier(tuple_size=2, wcc=0.05,
+                                 weights=args.weights, expand=args.corpus),
+                   "SMH (s=0.05)"),
+                  (CountVectorizer(max_df=0.9, min_df=5,
+                                   stop_words='english'),
+                   SMHClassifier(tuple_size=2, wcc=0.1,
+                                 weights=args.weights, expand=args.corpus),
+                   "SMH (s=0.1)"),
+                  (CountVectorizer(max_df=0.9, min_df=5,
+                                   stop_words='english'),
+                   SMHClassifier(tuple_size=3, wcc=0.05,
+                                 weights=args.weights, expand=args.corpus),
+                   "SMH (s=0.05)"),
+                  (CountVectorizer(max_df=0.9, min_df=5,
+                                   stop_words='english'),
+                   SMHClassifier(tuple_size=3, wcc=0.1,
+                                 weights=args.weights, expand=args.corpus),
+                   "SMH (s=0.1)"))
 
 def kfold_cv(data, target, k = 10):
     """
@@ -73,10 +89,8 @@ def evaluate_model(model, vectorizer, data, target, k = 10):
     for i, data_train, target_train, data_valid, target_valid in kfold_cv(data, target, k = 10):
         X_train = vectorizer.fit_transform(data_train)
         X_valid = vectorizer.transform(data_valid)
-        
-        model.fit(X_train)
 
-        topic_rep_train = model.transform(X_train)
+        topic_rep_train = model.fit_transform(X_train)
         topic_rep_valid = model.transform(X_valid)
 
         lsvc = LinearSVC()
@@ -96,14 +110,15 @@ def plot_classification_accuracies(show_flag, path_to_save):
     fig = plt.figure(1, figsize=(9, 6))
     ax = fig.add_subplot(111)
 
+    accuracy = np.zeros((len(configurations), len(vocabulary_sizes)))
     print "Evaluating topic discovery methods"
-    for vectorizer,model,name in configurations:
+    for i, (vectorizer, model, name) in enumerate(configurations):
         print "Evaluating", name
-        accuracy = np.zeros(len(vocabulary_sizes))
-        for i,nf in enumerate(vocabulary_sizes):
+        for j,nf in enumerate(vocabulary_sizes):
             vectorizer.set_params(max_features=nf)
-            accuracy[i] = evaluate_model(model, vectorizer, dataset.data, dataset.target)
+            accuracy[i, j] = evaluate_model(model, vectorizer, dataset.data, dataset.target)
         ax.plot(vocabulary_sizes, accuracy, label=name)
+        print "Accuracies = ", accuracy[i,:]
 
     ax.legend()
     plt.ylabel("Accuracy")
@@ -125,8 +140,12 @@ def main():
         parser.set_defaults(fig=False)
         parser.add_argument("-p", "--path_to_save", type=str, default=None,
                             help="file where to save the figure")
-        args = parser.parse_args()
+        p.add_argument("--corpus",default=None, action="store", dest="corpus",
+                       help="Corpus file")
+        p.add_argument("--weights",default=None, action="store", dest="weights",
+                       help="Weights file")
 
+        args = parser.parse_args()
         plot_classification_accuracies(args.show_flag, args.path_to_save)
         
     except SystemExit:

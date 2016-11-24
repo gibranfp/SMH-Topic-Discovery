@@ -28,6 +28,39 @@ import sys
 from operator import itemgetter
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import CountVectorizer
+from nltk.stem import WordNetLemmatizer
+from nltk import word_tokenize, pos_tag
+from nltk.corpus import wordnet
+from nltk.corpus.reader.wordnet import NOUN, VERB, ADV, ADJ
+from nltk.corpus.reader.wordnet import NOUN
+
+morphy_tag = {
+    'JJ' : ADJ,
+    'JJR' : ADJ,
+    'JJS' : ADJ,
+    'VB' : VERB,
+    'VBD' : VERB,
+    'VBG' : VERB,
+    'VBN' : VERB,
+    'VBP' : VERB,
+    'VBZ' : VERB,
+    'RB' : ADV,
+    'RBR' : ADV,
+    'RBS' : ADV
+}
+
+def line2terms(line):
+    """
+    Converts original text line to tokenized and lemmatized terms
+    """
+    tokens = word_tokenize(line.lower())
+    tagged = pos_tag(tokens)
+    lemmatizer = WordNetLemmatizer()
+    terms = []
+    for w,t in tagged:
+         terms.append(lemmatizer.lemmatize(w, pos=morphy_tag.get(t, NOUN)))
+
+    return terms
 
 def save_corpus_to_file(filename, corpus_list):
     """
@@ -88,7 +121,7 @@ def load_vocabulary(vocpath):
 
     return vocabulary
 
-def fetch_and_save(dirpath, vocpath, min_df = 6):
+def fetch_and_save(dirpath, vocpath = None, min_df = 6, tokenizer = None):
     """
     Fetches the 20 newsgroups corpus, vectorized the documents, stores them in
     a database of lists and saves it to file.
@@ -101,9 +134,14 @@ def fetch_and_save(dirpath, vocpath, min_df = 6):
     # uses a predefined vocabulary list if available
     if vocpath:
         vocabulary = load_vocabulary(vocpath)
-        newsgroups_counter = CountVectorizer(stop_words='english', vocabulary=vocabulary, min_df=min_df)
+        newsgroups_counter = CountVectorizer(stop_words='english',
+                                             tokenizer=tokenizer,
+                                             vocabulary=vocabulary,
+                                             min_df=min_df)
     else:
-        newsgroups_counter = CountVectorizer(stop_words='english', min_df=min_df)
+        newsgroups_counter = CountVectorizer(stop_words='english',
+                                             tokenizer=tokenizer,
+                                             min_df=min_df)
 
     # generates csr matrix with the vectors of term frequencies
     newsgroups_mat = newsgroups_counter.fit_transform(newsgroups_dataset.data)
@@ -134,8 +172,15 @@ def main():
                             help="directory where the corpus is to be saved (default = cwd)")
         parser.add_argument("-v", "--vocabulary", type=str, default=None,
                             help="file where to save the figure")
+        parser.add_argument("-t", "--tokenizer", type=bool, default=False,
+                            help="Use custom tokenizer")
         args = parser.parse_args()
-        fetch_and_save(args.dir, args.vocabulary, args.min)
+
+        if args.tokenizer:
+            fetch_and_save(args.dir, args.vocabulary, args.min, tokenizer = None)
+        else:
+            fetch_and_save(args.dir, args.vocabulary, args.min, tokenizer = line2terms)
+            
             
     except SystemExit:
         print "for help use --help"

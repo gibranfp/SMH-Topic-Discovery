@@ -9,7 +9,7 @@ time python python/experiments.py \
     --fig_pref experiments_kbsystems/different_s/figs/nips_ \
     --topics_pref experiments_kbsystems/different_s/topics/nips_ \
     --clus --min_cluster_size 5 \
-    --min_coherence 2.0 \
+    --min_coherence 0.0 \
     --cutoff 3 \
     -p 3 0.20 \
     -p 3 0.18 \
@@ -17,8 +17,8 @@ time python python/experiments.py \
     -p 3 0.14 \
     -p 3 0.12 \
     -p 3 0.10 \
-    --voca-corpus data/wikipedia/wiki.vocab \
-    --voca-topics data/knowceans-ilda/nips/nips.vocab \
+    --voca-corpus data/wikipedia/wikien.vocab \
+    --voca-topics data/knowceans-ilda/nips/nips_wikivoca.vocab \
     data/knowceans-ilda/nips/nips.tf.ifs \
     data/knowceans-ilda/nips/nips.tf.ifs \
     data/wikipedia/wiki.test.tf.ifs

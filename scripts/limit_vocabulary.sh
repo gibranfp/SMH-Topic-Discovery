@@ -24,7 +24,7 @@ smhcmd weights -w ids \
 
 
 echo "Limiting vocabulary to wikien.vocab"
-python python/cutoffvoca.py \
+python python/utils/cutoffvoca.py \
     --voca data/wikipedia/wikien.vocab\
     data/knowceans-ilda/nips/nips.vocab\
     data/knowceans-ilda/nips/nips.corpus\
@@ -55,7 +55,7 @@ smhcmd weights -w ids \
 nips_vocab_sizes=(2000 4000 6000 8000 10000 12000)
 for size in ${nips_vocab_sizes[@]}; do
     echo "NIPS corpus with vocabulary reduced to $size"
-    python python/cutoffvoca.py --max $size \
+    python python/utils/cutoffvoca.py --max $size \
            --voca data/wikipedia/wikien.vocab\
            data/knowceans-ilda/nips/nips.vocab\
            data/knowceans-ilda/nips/nips.corpus\
@@ -108,7 +108,7 @@ smhcmd weights -w ids \
 
 
 echo "Limiting vocabulary to wikien.vocab"
-python python/cutoffvoca.py \
+python python/utils/cutoffvoca.py \
     --voca data/wikipedia/wikien.vocab\
     data/20newsgroups/20newsgroups.vocab\
     data/20newsgroups/20newsgroups.corpus\
@@ -139,7 +139,7 @@ smhcmd weights -w ids \
 twenty_newsgroups_vocab_sizes=(2000 4000 6000 8000 10000 12000 14000 16000 18000)
 for size in ${twenty_newsgroups_vocab_sizes[@]}; do
     echo "20 newsgroups corpus with vocabulary reduced to $size"
-    python python/cutoffvoca.py --max $size \
+    python python/utils/cutoffvoca.py --max $size \
            --voca data/wikipedia/wikien.vocab\
            data/20newsgroups/20newsgroups.vocab\
            data/20newsgroups/20newsgroups.corpus\
@@ -192,7 +192,7 @@ smhcmd weights -w ids \
 
 
 echo "Limiting vocabulary to wikien.vocab"
-python python/cutoffvoca.py \
+python python/utils/cutoffvoca.py \
     --voca data/wikipedia/wikien.vocab\
     data/reuters/reuters.train.vocab\
     data/reuters/reuters.train.corpus\
@@ -223,7 +223,7 @@ smhcmd weights -w ids \
 twenty_newsgroups_vocab_sizes=(10000 20000 30000 40000 50000 60000 70000 80000 90000 100000)
 for size in ${twenty_newsgroups_vocab_sizes[@]}; do
     echo "20 newsgroups corpus with vocabulary reduced to $size"
-    python python/cutoffvoca.py --max $size \
+    python python/utils/cutoffvoca.py --max $size \
            --voca data/wikipedia/wikien.vocab\
            data/reuters/reuters.train.vocab\
            data/reuters/reuters.train.corpus\
@@ -277,7 +277,7 @@ smhcmd weights -w ids \
 twenty_newsgroups_vocab_sizes=(100000 200000 300000 400000 500000 600000 700000 800000)
 for size in ${twenty_newsgroups_vocab_sizes[@]}; do
     echo "20 newsgroups corpus with vocabulary reduced to $size"
-    python python/cutoffvoca.py --max $size \
+    python python/utils/cutoffvoca.py --max $size \
            --voca data/wikipedia/wikien.vocab\
            data/wikipedia/wikien.vocab\
            data/wikipedia/wikien.train.corpus\

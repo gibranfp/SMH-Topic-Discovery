@@ -35,11 +35,8 @@ nosetests.xml
 .project
 .pydevproject
 
-clusters/
 data/
-imgs/
-report.pdf
-report.rst
+experiments/
 *.swo
 *.swp
 Makefile

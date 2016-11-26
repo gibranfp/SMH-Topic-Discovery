@@ -25,11 +25,10 @@ document per line
 """
 import argparse
 import sys
+import codecs
 import os
 import os.path
 import random
-import re
-import codecs
 from collections import Counter
 from nltk.stem import WordNetLemmatizer
 from nltk import word_tokenize, pos_tag
@@ -50,7 +49,8 @@ morphy_tag = {
     'RBR' : ADV,
     'RBS' : ADV
 }
-                
+
+
 def line2terms(line):
     """
     Converts original text line to tokenized and lemmatized terms
@@ -69,17 +69,19 @@ def wiki2ref(wikitext, reference):
     Reads Wikipedia's text file produced by wiki2text, processes it and
     stores it in a single line per document format
     """
-    re_title = re.compile('^= ')
+    title = '= '
+    section = '=='
     with codecs.open(reference, 'w', 'utf-8') as f:
         for i, line in enumerate(codecs.open(wikitext, encoding = "utf-8")):
-            if re_title.match(line):
+            if line[:2] == title:
                 if i > 0:
                     f.write('\n')
             else:
-                terms = line2terms(re.sub("[=\n]", "", line).lower())
+                terms = line2terms(line.rstrip().replace('=', '').lower())
                 f.write(terms)
-            
-    
+                if line[:2] == section:
+                    f.write(' ')
+                    
 def main():
     parser = argparse.ArgumentParser("Creates reference corpus")
     parser.add_argument("wikitext",
@@ -89,8 +91,6 @@ def main():
     args = parser.parse_args()
 
     wiki2ref(args.wikitext, args.reference)
-    
-    
+        
 if __name__ == "__main__":
     main()
-

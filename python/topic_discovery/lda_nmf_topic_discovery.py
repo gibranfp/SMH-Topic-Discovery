@@ -24,6 +24,7 @@ Performs topic discovery using NMF and Online LDA
 """
 import argparse
 import sys
+import os
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import NMF, LatentDirichletAllocation
@@ -32,28 +33,29 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import time
 
 # Topic discovery configurations to evaluate
 configurations = ((NMF(n_components=100, 
                        alpha=.1,
                        l1_ratio=.5,
                        random_state=0),
-                   "NMF (100 topics)"),
-                   (NMF(n_components=200,
-                        alpha=.1,
-                        l1_ratio=.5,
-                        random_state=0),
-                    "NMF (200 topics)"),
+                   "nmf100"),
+                  (NMF(n_components=200,
+                       alpha=.1,
+                       l1_ratio=.5,
+                       random_state=0),
+                   "nmf200"),
                   (NMF(n_components=300,
                        alpha=.1,
                        l1_ratio=.5,
                        random_state=0),
-                   "NMF (300 topics)"),
+                   "nmf300"),
                   (NMF(n_components=400,
                        alpha=.1,
                        l1_ratio=.5,
                        random_state=0),
-                   "NMF (400 topics)"),
+                   "nmf400"),
                   (LatentDirichletAllocation(n_topics=100,
                                              max_iter=5,
                                              learning_method='online',
@@ -61,29 +63,73 @@ configurations = ((NMF(n_components=100,
                                              learning_decay=0.5,
                                              learning_offset=64,
                                              random_state=0),
-                   "Online LDA (100 topics)"),
+                   "lda100"),
                   (LatentDirichletAllocation(n_topics=200,
                                              learning_method='online',
                                              batch_size=4096,
                                              learning_decay=0.5,
                                              learning_offset=64,
                                              random_state=0),
-                   "Online LDA (200 topics)"),
+                   "lda200"),
                   (LatentDirichletAllocation(n_topics=300,
                                              learning_method='online',
                                              batch_size=4096,
                                              learning_decay=0.5,
                                              learning_offset=64,
                                              random_state=0),
-                   "Online LDA (300 topics)"),
+                   "lda300"),
                   (LatentDirichletAllocation(n_topics=400,
                                              learning_method='online',
                                              batch_size=4096,
                                              learning_decay=0.5,
                                              learning_offset=64,
                                              random_state=0),
-                   "Online LDA (400 topics)"))
+                  "lda400"))
 
+def load_vocabulary(vocpath):
+    """
+    Reads a vocabulary and stores it in a dictionary
+    """
+    vocabulary = {}
+    with open(vocpath, 'r') as f:
+        content = f.readlines()
+        for line in content:
+            tokens = line.split(' = ')
+            vocabulary[int(tokens[1])] = tokens[0]
+
+    return vocabulary
+
+def save_topics(filepath, topics, top = 10):
+    """
+    Saves topics to a file
+    """
+    with open(filepath, 'w') as f:
+        for t in topics:
+            f.write(' '.join(t[:top]).encode('utf8'))
+            f.write('\n'.encode('utf8'))
+
+def save_time(filepath, total_time):
+    """
+    Saves time to a file
+    """
+    with open(filepath, 'w') as f:
+        f.write(str(total_time))
+
+def models_to_topics(models, vocpath):
+    """
+    Reads a vocabulary and stores it in a dictionary
+    """
+    topics = []
+    vocabulary = load_vocabulary(vocpath)
+    for i,m in enumerate(models):
+        terms = []
+        for j in m.argsort():
+            terms.append(vocabulary[j])
+        
+        topics.append(terms)
+
+    return topics
+    
 def load_listdb_as_csr(listdb_file):
     """
     Returns the ListDB structure as a Compressed Sparse Row (CSR) matrix
@@ -102,72 +148,41 @@ def load_listdb_as_csr(listdb_file):
 
     return csr_matrix((data, indices, indptr), dtype=np.uint32)
 
-def save_topics(filename, coherence, model):
-    print "Saving topics to",filename
-    with open(filename ,'w') as f:
-        print "Total tópicos", len(coherence)
-        for c,t in coherence:
-            t = model.ldb[t]
-            ws = [voca[w.item] for w in t]
-            print >> f, c, ", ".join(ws)
-
-def pmi(t_i, t_j, ifs, vocabulary_mapper):
-    p_i = ifs[t_i,:].sum()
-    p_i = ifs[t_i,:].sum()
-    for d in ifs[t_i,:]:
-        
-    
-def compute_pmi_score(topics, corpus, vocabulary_mapper = None):
-    results = []
-    sorted_words = np.argsort(topics)
-
-    for i,row in enumerate(topics):
-        topic_coherence = 0.0
-        for j in range(top_terms):
-            for k in range(j + 1, top_terms):
-                pmi(j, k, corpus, vocabulary_mapper)
-    
 def discover_topics(model,
                     name,
-                    train_corpus,
-                    train_vocab,
-                    test_corpus,
-                    test_vocab,
-                    modelfile,
-                    topicfile,
-                    timefile):
+                    corpuspath,
+                    vocpath,
+                    savedir,
+                    top_terms_numbers = [10]):
     """
     Discovers topics and evaluates model using topic coherence
     """
     print "Loading train corpus"
-    train_documents = load_listdb_as_csr(train_corpus)
+    documents = load_listdb_as_csr(corpuspath)
 
     print "Discovering topics using", name
-    model.fit(train_documents)
+    start_time = time.time()
+    model.fit(documents)
+    end_time = time.time()
+    total_time = end_time - start_time
+              
+    print "Generating topics (lists of terms) from models"
+    topics = models_to_topics(model.components_, vocpath)
 
-    print "Loading test corpus"
-    test_documents = load_listdb_as_csr(test_corpus)
+    corpusname = os.path.splitext(os.path.basename(corpuspath))[0]
+    modelfile = savedir + '/' + name + '_' + corpusname + '.models'
+    print "Saving resulting models to", modelfile
+    np.savetxt(modelfile, model.components_)
 
-    print "Loading train vocabulary"
-    train_vocabulary = utils.i2v(train_vocab)
+    # save topics with different top terms numbers
+    for top in top_terms_numbers:
+        topicfile = savedir + '/' + name + '_' + corpusname + '_top' + str(top) + '.topics'
+        print "Saving the top", top, " terms of the topic to", topicfile
+        save_topics(topicfile, topics, top = top)
 
-    print "Mapping train and test vocabularies"
-    vocabulary_mapper = utils.t2c(train_vocab, test_vocab)
-    
-    # print "Calculating coherence on testing..."
-    # test_models,test_coherence = coherence(train_models,
-    #                                        test_corpus,
-    #                                        vocab_mapper,
-    #                                        ntop=10,
-    #                                        min_coherence = -1)
-    # test_coherence = [(c,t) for t,c in test_coherence]
-    # test_coherence.sort()
-    # test_coherence.reverse()
-      
-    # print "Saving resulting model to", modelfile
-    # train_models.save(filename)
-
-    # save_topics(topicfile, test_coherence, train_models)
+    timefile = savedir + '/' + name + '_' + corpusname + '.time'
+    print "Saving times to", timefile
+    save_time(timefile, total_time)
 
 def main():
     try:
@@ -175,32 +190,23 @@ def main():
         parser = argparse.ArgumentParser(
         description="Evaluates NMF and Online LDA in topic discovery")
         parser.set_defaults(fig=False)
-        parser.add_argument("train_corpus", nargs=1, type=str,
-                            help="Train corpus file (database of ID lists)")
-        parser.add_argument("train_vocab", nargs=1, type=str,
-                            help="Vocabulary file for train corpus")
-        parser.add_argument("test_corpus", nargs=1, type=str,
-                            help="Test corpus file (database of ID lists)")
-        parser.add_argument("test_vocab", nargs=1, type=str,
-                            help="Vocabulary file for test corpus")
-        parser.add_argument("models", nargs=1, type=str,
-                            help="file where to save the models (database of ID lists)")
-        parser.add_argument("topics",  nargs=1, type=str,
-                            help="file where to save the topics (database of word lists and coherences)")
-        parser.add_argument("times",  nargs=1, type=str,
-                            help="file where to save the time and memory used")
+        parser.add_argument("corpus", nargs=1, type=str,
+                            help="Corpus file (database of ID lists)")
+        parser.add_argument("vocabulary", nargs=1, type=str,
+                            help="Vocabulary file for corpus")
+        parser.add_argument("dir",  nargs=1, type=str,
+                            help="Directory where the models, topics and times are to be saved")
+        parser.add_argument("-t", "--top", type=int, default=[5, 10, 15, 20], nargs='*',
+                            help="Configuration number to try")
         parser.add_argument("-c", "--config", type=int, default=0,
                             help="Configuration number to try")
         args = parser.parse_args()
         discover_topics(configurations[args.config][0],
                         configurations[args.config][1],
-                        args.train_corpus[0],
-                        args.train_vocab[0],
-                        args.test_corpus[0],
-                        args.test_vocab[0],
-                        args.models[0],
-                        args.topics[0],
-                        args.times[0])
+                        args.corpus[0],
+                        args.vocabulary[0],
+                        args.dir[0],
+                        args.top)
         
     except SystemExit:
         print "for help use --help"

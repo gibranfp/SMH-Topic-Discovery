@@ -33,6 +33,39 @@ from sklearn.datasets import fetch_20newsgroups
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from nltk.stem import WordNetLemmatizer
+from nltk import word_tokenize, pos_tag
+from nltk.corpus import wordnet
+from nltk.corpus.reader.wordnet import NOUN, VERB, ADV, ADJ
+from nltk.corpus.reader.wordnet import NOUN
+
+morphy_tag = {
+    'JJ' : ADJ,
+    'JJR' : ADJ,
+    'JJS' : ADJ,
+    'VB' : VERB,
+    'VBD' : VERB,
+    'VBG' : VERB,
+    'VBN' : VERB,
+    'VBP' : VERB,
+    'VBZ' : VERB,
+    'RB' : ADV,
+    'RBR' : ADV,
+    'RBS' : ADV
+}
+
+def line2terms(line):
+    """
+    Converts original text line to tokenized and lemmatized terms
+    """
+    tokens = word_tokenize(line.lower())
+    tagged = pos_tag(tokens)
+    lemmatizer = WordNetLemmatizer()
+    terms = []
+    for w,t in tagged:
+         terms.append(lemmatizer.lemmatize(w, pos=morphy_tag.get(t, NOUN)))
+
+    return terms
 
 # maximum and minimum document frequency of a term
 max_df = 0.95

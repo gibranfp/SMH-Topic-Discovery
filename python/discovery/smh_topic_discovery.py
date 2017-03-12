@@ -3,7 +3,7 @@
 #
 # Gibran Fuentes-Pineda <gibranfp@unam.mx>
 # IIMAS, UNAM
-# 2016
+# 2017
 #
 # -------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
@@ -214,7 +214,6 @@ def main():
         parser = argparse.ArgumentParser()
         parser = argparse.ArgumentParser(
         description="Evaluates Sampled Min-Hashing in topic discovery")
-        parser.set_defaults(fig=False)
         parser.add_argument("ifs", type=str,
                             help="Inverted file of corpus (database of ID lists)")
         parser.add_argument("vocabulary", type=str,

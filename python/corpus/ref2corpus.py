@@ -108,13 +108,13 @@ def ref2corpus(refpath, swpath, dirpath, cutoff = 10000):
 def main():
     parser = argparse.ArgumentParser("Generates a corpus from a reference file")
     parser.add_argument("ref",
-                        help="Reference file produced by wiki2ref, reuters2ref or 20newsgroups2ref")
+                        help = "Reference file")
     parser.add_argument("stopwords", 
-                        help="Stopwords file")
+                        help = "Stopwords file")
     parser.add_argument("dirpath",
-                        help="Directory where the corpus and vocabulary files are to be saved")
-    parser.add_argument("-c", "--cutoff", type=int, default=10000,
-                        help="Vocabulary cutoff")
+                        help = "Directory where to save corpus and vocabulary")
+    parser.add_argument("-c", "--cutoff", type = int, default = 10000,
+                        help = "Vocabulary cutoff")
     args = parser.parse_args()
     
     ref2corpus(args.ref,

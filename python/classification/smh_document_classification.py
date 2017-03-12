@@ -34,6 +34,10 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+# maximum and minimum document frequency of a term
+max_df = 0.95
+min_df = 2
+
 # vocabulary sizes to evaluate
 vocabulary_sizes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
 configurations = ((CountVectorizer(max_df=0.9, min_df=5,

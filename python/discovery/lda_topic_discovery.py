@@ -34,68 +34,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import time
-
-def load_vocabulary(vocpath):
-    """
-    Reads a vocabulary and stores it in a dictionary
-    """
-    vocabulary = {}
-    with open(vocpath, 'r') as f:
-        content = f.readlines()
-        for line in content:
-            tokens = line.split(' = ')
-            vocabulary[int(tokens[1])] = tokens[0]
-
-    return vocabulary
-
-def save_topics(filepath, topics, top = 10):
-    """
-    Saves topics to a file
-    """
-    with open(filepath, 'w') as f:
-        for t in topics:
-            f.write(' '.join(t[:top]).encode('utf8'))
-            f.write('\n'.encode('utf8'))
-
-def save_time(filepath, total_time):
-    """
-    Saves time to a file
-    """
-    with open(filepath, 'w') as f:
-        f.write(str(total_time))
-
-def models_to_topics(models, vocpath):
-    """
-    Reads a vocabulary and stores it in a dictionary
-    """
-    topics = []
-    vocabulary = load_vocabulary(vocpath)
-    for i,m in enumerate(models):
-        terms = []
-        for j in m.argsort()[::-1]:
-            terms.append(vocabulary[j])
-        
-        topics.append(terms)
-
-    return topics
-    
-def load_listdb_as_csr(listdb_file):
-    """
-    Returns the ListDB structure as a Compressed Sparse Row (CSR) matrix
-    """
-    with open(listdb_file, 'r') as f:
-        content = f.readlines()
-        indptr = [0]
-        indices = []
-        data = []
-        for line in content:
-            for entry in line.split()[1:]:
-                term,value = entry.split(':')
-                indices.append(int(term))
-                data.append(int(value))
-            indptr.append(len(indices))
-
-    return csr_matrix((data, indices, indptr), dtype=np.uint32)
+from smh import csr_load_from_listdb_file
+from topics import load_vocabulary, save_topics, save_time, array_to_topics
 
 def discover_topics(corpuspath,
                     vocpath,
@@ -106,7 +46,7 @@ def discover_topics(corpuspath,
     Discovers topics and evaluates model using topic coherence
     """
     print "Loading corpus"
-    documents = load_listdb_as_csr(corpuspath)
+    documents = csr_load_from_listdb_file(corpuspath)
 
     # LDA model (parameter choice based on )
     model = LatentDirichletAllocation(n_topics = n_topics,
@@ -133,7 +73,7 @@ def discover_topics(corpuspath,
     total_time = end_time - start_time
               
     print "Generating topics (lists of terms) from models"
-    topics = models_to_topics(model.components_, vocpath)
+    topics = array_to_topics(model.components_, vocpath)
 
     corpusname = os.path.splitext(os.path.basename(corpuspath))[0]
     modelfile = savedir + '/lda' + str(n_topics) + '_' + corpusname + '.models'

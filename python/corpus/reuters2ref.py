@@ -30,7 +30,7 @@ from collections import Counter
 import os
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
-from utils import line2tokens
+from tokenizer import line2tokens
 
 def get_zipfiles(dirs):
     """

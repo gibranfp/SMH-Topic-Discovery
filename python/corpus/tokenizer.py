@@ -3,7 +3,7 @@
 #
 # Gibran Fuentes-Pineda <gibranfp@unam.mx>
 # IIMAS, UNAM
-# 2016
+# 2017
 #
 # -------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
@@ -54,16 +54,3 @@ def line2tokens(line):
          tokens.append(lemmatizer.lemmatize(w, pos=morphy_tag.get(t, NOUN)))
 
     return tokens
-
-# def line2tokens(line):
-#     """
-#     Converts a text line to a list of tokenized and lemmatized tokens
-#     """
-#     terms = [t.lower() for t in term_re.findall(line)]
-#     tagged = pos_tag(word_tokenize(' '.join(terms)))
-#     lemmatizer = WordNetLemmatizer()
-#     tokens = []
-#     for w,t in tagged:
-#          tokens.append(lemmatizer.lemmatize(w, pos=morphy_tag.get(t, NOUN)))
-
-#     return tokens

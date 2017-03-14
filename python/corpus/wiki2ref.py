@@ -26,7 +26,7 @@ document per line
 import argparse
 import codecs
 from collections import Counter
-from utils import line2tokens
+from tokenizer import line2tokens
 
 def wiki2ref(wiki2text, dirpath):
     """

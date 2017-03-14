@@ -31,52 +31,7 @@ from smh import smh
 from math import log
 import time
 import os
-
-def load_vocabulary(vocpath):
-    """
-    Reads a vocabulary and stores it in a dictionary
-    """
-    vocabulary = {}
-    with open(vocpath, 'r') as f:
-        content = f.readlines()
-        for line in content:
-            tokens = line.split(' = ')
-            vocabulary[int(tokens[1])] = tokens[0]
-
-    return vocabulary
-
-def models_to_topics(models, vocpath):
-    """
-    Reads a vocabulary and stores it in a dictionary
-    """
-    topics = []
-    vocabulary = load_vocabulary(vocpath)
-    for m in models.ldb:
-        terms = []
-        for j in m:
-            terms.append(vocabulary[j.item])
-        topics.append(terms)
-
-    return topics
-
-def save_topics(filepath, topics, top = None):
-    """
-    Saves topics to a file
-    """
-    with open(filepath, 'w') as f:
-        for t in topics:
-            if top:
-                f.write(' '.join(t[:top]).encode('utf8'))
-            else:
-                f.write(' '.join(t).encode('utf8'))
-            f.write('\n'.encode('utf8'))
-
-def save_time(filepath, total_time):
-    """
-    Saves time to a file
-    """
-    with open(filepath, 'w') as f:
-        f.write(str(total_time))
+from topics import load_vocabulary, 
 
 class SMHTopicDiscovery(BaseEstimator):
     """

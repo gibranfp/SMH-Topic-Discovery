@@ -3,7 +3,7 @@
 #
 # Gibran Fuentes-Pineda <gibranfp@unam.mx>
 # IIMAS, UNAM
-# 2016
+# 2017
 #
 # -------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ import codecs
 import re
 from collections import Counter
 from sklearn.datasets import fetch_20newsgroups
-from utils import line2tokens
+from tokenizer import line2tokens
 
 def newsgroups2ref(dirpath):
     """

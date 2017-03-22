@@ -3,7 +3,7 @@
 #
 # Gibran Fuentes-Pineda <gibranfp@unam.mx>
 # IIMAS, UNAM
-# 2016
+# 2017
 #
 # -------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
@@ -105,8 +105,6 @@ def main():
         parser.add_argument("-n", "--n_topics", type=int, default=100,
                             help="Number of topics")
         parser.add_argument("-t", "--top", type=int, default=[5, 10, 15, 20], nargs='*',
-                            help="Configuration number to try")
-        parser.add_argument("-c", "--config", type=int, default=0,
                             help="Configuration number to try")
         args = parser.parse_args()
         discover_topics(args.corpus[0],

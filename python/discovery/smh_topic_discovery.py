@@ -39,31 +39,38 @@ class SMHTopicDiscovery(BaseEstimator):
     """
     def __init__(self,
                  tuple_size = 3,
-                 n_tuples = 692,
-                 wcc = None,
+                 number_of_tuples = 255,
+                 table_size = 2**19,
+                 cooccurrence_threshold = None, 
+                 min_set_size = 3,
+                 cluster_number_of_tuples = 255,
+                 cluster_tuple_size = 3,
+                 cluster_table_size = 2**20,
                  overlap = 0.7,
-                 min_mined_size = 5,
-                 clustering = 'mhlink',
-                 min_cluster_size = 5,
-                 number_of_clusters = 100):
-        self.tuple_size = tuple_size
-        self.overlap = overlap
-        self.min_mined_size = min_mined_size
-        self.clustering = clustering
-        self.min_cluster_size = min_cluster_size
-        self.number_of_clusters = number_of_clusters
+                 min_cluster_size = 3):
 
-        if wcc:
-            self.wcc = wcc
-            self.n_tuples = int(log(0.5) / log(1.0 - pow(wcc, tuple_size)))
-        elif n_tuples:
-            self.n_tuples = n_tuples
+        self.tuple_size_ = tuple_size
+
+        if cooccurrence_threshold:
+            self.cooccurrence_threshold = cooccurrence_threshold
+            self.number_of_tuples = log(0.5) / log(1.0 - pow(cooccurrence_threshold, tuple_size))
+        else:
+            self.number_of_tuples = number_of_tuples
+
+        self.table_size_ = table_size
+        self.min_set_size_ = min_set_size
+        self.cluster_number_of_tuples_ = cluster_number_of_tuples
+        self.cluster_tuple_size_ = cluster_tuple_size
+        self.cluster_table_size_ = cluster_table_size
+        self.overlap_ = overlap
+        self.min_cluster_size_ = min_cluster_size
 
         clustering_option = {
             'minibatch' : MiniBatchKMeans(n_clusters = number_of_clusters),
             'kmeans' : KMeans(n_clusters = number_of_clusters,),
             'spectral' : MiniBatchKMeans(n_clusters = number_of_clusters)
         }
+        
         if self.clustering != 'mhlink':
             self.algorithm = clustering_option.get(self.clustering, None)
             if not self.algorithm:
@@ -135,7 +142,7 @@ def discover_topics(ifspath,
     total_time = end_time - start_time
               
     print "Generating topics (lists of terms) from models"
-    topics = models_to_topics(model.models, vocpath)
+    topics = listdb_to_topics(model.models, vocpath)
 
     corpusname = os.path.splitext(os.path.basename(ifspath))[0]
     mine_config = '_r' + str(tuple_size) + '_l' +  str(model.n_tuples) + '_w' + str(wcc)

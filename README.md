@@ -1,13 +1,22 @@
-# Experiments in Sampled Min-Hashing
-
-
+B1;4205;0c# Topic discovery with Sampled Min-Hashing
 
 ## Installation
 
-SMH-Topic-Discovery has the following dependencies:
+Install dependencies (use ~sudo~ for system-wide installation):
 
-* https://github.com/gibranfp/Sampled-MinHashing
+~~~~	
+pip install sklearn nltk
+~~~~
 
+Download NLTK's required resources by doing:
+
+~~~~
+python -m nltk.downloader punkt averaged_perceptron_tagger wordnet
+~~~~
+
+Install Sampled-MinHashing (see README at https://github.com/gibranfp/Sampled-MinHashing).
+
+## Corpora
 It will download the followind resources/corpora using 'scripts/prepare\_db.sh':
 
 * NIPS

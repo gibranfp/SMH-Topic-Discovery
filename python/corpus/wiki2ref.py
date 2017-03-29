@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+}#!/usr/bin/env python
 # -*- coding: utf-8
 #
 # Gibran Fuentes-Pineda <gibranfp@unam.mx>
@@ -36,7 +36,7 @@ def wiki2ref(wiki2text, dirpath):
     title_mark = '= '
     section_mark = '=='
 
-    refpath = dirpath + '/enwi.kiref.txt'
+    refpath = dirpath + '/enwiki.ref.txt'
     titlespath = dirpath + '/enwiki.titles.txt'
 
     fref = codecs.open(refpath, 'w', 'utf-8') 

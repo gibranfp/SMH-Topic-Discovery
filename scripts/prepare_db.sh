@@ -8,15 +8,11 @@ THIRDPARTYPATH=$ROOTPATH/3rdParty
 DATAPATH=$ROOTPATH/data
 mkdir -p $DATAPATH
 WIKIDUMPEN="http://dumps.wikimedia.org/enwiki/20161101/enwiki-20161101-pages-articles.xml.bz2"
-WIKILINKEN="http://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-langlinks.sql.gz"
-WIKITITLEEN="https://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-page_props.sql.gz"
 
 NIPS=false
 REUTERS=false
 TWENTYNG=false
 WIKIPEDIA=false
-WIKIPEDIAEN=false
-WIKI2TEXT=false
 while getopts ":abcnrtwe" opt; do
     case $opt in
         a)
@@ -126,56 +122,17 @@ if $WIKIPEDIA; then
     bunzip2 -c $DATAPATH/wikipedia/wikien.xml.bz2 \
         | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
 
-    echo "Genereting BOWs"
-    python $ROOTPATH/python/wikipedia/wiki2corpus.py \
-           $DATAPATH/wikipedia/enwiki.txt \
-           --split train 80 \
-           --split test 20 \
-           --odir $DATAPATH/wikipedia/ \
-           --stop-words $DATAPATH/stopwords_english.txt \
-           --cutoff 10 \
-           --corpus wikien
+    echo "Genereting reference text from wikipedia"
+    python $ROOTPATH/python/corpus/wiki2ref.py \
+	   $DATAPATH/wikipedia/enwiki.txt \
+	   $DATAPATH/wikipedia/
 
-    echo "Done processing Wikipedia corpus"
-fi
-
-if $WIKIPEDIAEN; then
-    echo "Preparing Wikipedia"    
-    mkdir -p $DATAPATH/wikipedia
-
-    if [ ! -f $DATAPATH/wikipedia/wikien.xml.bz2 ]; then
-        echo "Downloading Wikipedia dump"
-        wget -qO- -O $DATAPATH/wikipedia/wikien.xml.bz2 \
-             $WIKIDUMPEN
-    fi
-
-  	if [ ! -f $DATAPATH/wikipedia/wikien.sql.gz ]; then
-        echo "Downloading Wikipedia link"
-        wget -qO- -O $DATAPATH/wikipedia/wikien.sql.gz \
-             $WIKILINKEN
-    fi
-
-
-  	if [ ! -f $DATAPATH/wikipedia/wikien.title.gz ]; then
-        echo "Downloading Wikipedia link"
-        wget -qO- -O $DATAPATH/wikipedia/wikien.title.gz \
-             $WIKITITLEEN
-    fi
-
-
-    echo "Uncompressing and parsing Wikipedia dump"
-    bunzip2 -c $DATAPATH/wikipedia/wikien.xml.bz2 \
-        | $THIRDPARTYPATH/wiki2text/wiki2text > $DATAPATH/wikipedia/enwiki.txt
-
-    echo "Genereting BOWs"
-    python $ROOTPATH/python/wikipedia/wiki2corpus.py \
-           $DATAPATH/wikipedia/enwiki.txt \
-           --split train 80 \
-           --split test 20 \
-           --odir $DATAPATH/wikipedia/ \
-           --stop-words $DATAPATH/stopwords_english.txt \
-           --cutoff 10 \
-           --corpus wikien
-
+    echo "Genereting BOWs from wikipedia reference"
+    python $ROOTPATH/python/corpus/wikiref2corpus.py \
+	   $DATAPATH/wikipedia/enwiki.ref.txt \
+	   $DATAPATH/stopwords_english.txt \
+	   $DATAPATH/wikipedia/enwiki.corpus \
+	   $DATAPATH/wikipedia/enwiki.vocab \
+	   -c 1000000
     echo "Done processing Wikipedia corpus"
 fi

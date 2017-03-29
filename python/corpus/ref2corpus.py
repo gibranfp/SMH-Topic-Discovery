@@ -114,7 +114,7 @@ def main():
     parser.add_argument("dirpath",
                         help = "Directory where to save corpus and vocabulary")
     parser.add_argument("-c", "--cutoff", type = int, default = 10000,
-                        help = "Vocabulary cutoff")
+                        help = "Vocabulary size")
     args = parser.parse_args()
     
     ref2corpus(args.ref,

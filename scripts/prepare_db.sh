@@ -128,8 +128,8 @@ if $WIKIPEDIA; then
 	   $DATAPATH/wikipedia/
 
     echo "Genereting BOWs from wikipedia reference"
-    python $ROOTPATH/python/corpus/wikiref2corpus.py \
-	   $DATAPATH/wikipedia/enwiki.ref.txt \
+    python $ROOTPATH/python/corpus/ref2corpus.py \
+	   $DATAPATH/wikipedia/enwiki.ref \
 	   $DATAPATH/stopwords_english.txt \
 	   $DATAPATH/wikipedia/ \
 	   -c 1000000

@@ -41,9 +41,9 @@ def newsgroups2ref(dirpath):
                                             remove=('headers','footers', 'quotes'),
                                             random_state=123)
 
-    refpath = dirpath + "/20newsgroups.ref.txt"
-    labelspath = dirpath + "/20newsgroups.labels.txt"
-    namespath = dirpath + "/20newsgroups.names.txt"
+    refpath = dirpath + "/20newsgroups.ref"
+    labelspath = dirpath + "/20newsgroups.labels"
+    namespath = dirpath + "/20newsgroups.names"
     
     fref = codecs.open(refpath, 'w', 'utf-8')
     flabels = codecs.open(labelspath, 'w', 'utf-8')

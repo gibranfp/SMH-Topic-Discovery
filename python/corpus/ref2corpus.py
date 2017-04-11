@@ -83,7 +83,7 @@ def ref2corpus(refpath, swpath, dirpath, cutoff = 10000):
     Reads reference file produced by wiki2ref, reuters2ref or 20newsgroups2ref
     and generates a corpus file
     """
-    basename = os.path.basename(refpath).rstrip('.ref.txt')
+    basename = os.path.basename(refpath).rstrip('.ref')
     corpuspath = dirpath + '/' + basename + str(cutoff) + '.corpus'
     vocpath = dirpath + '/' + basename + str(cutoff) + '.vocab'
     

@@ -20,36 +20,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------
 """
-Performs topic discovery using NMF and Online LDA
+Performs topic discovery using Online LDA
 """
 import argparse
 import sys
 import os
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.decomposition import NMF, LatentDirichletAllocation
-from scipy.sparse import csr_matrix
-from sklearn.externals import joblib
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import time
+import numpy as np
+from sklearn.decomposition import LatentDirichletAllocation
 from smh import csr_load_from_listdb_file
 from topics import load_vocabulary, save_topics, save_time, array_to_topics
 
 def discover_topics(corpuspath,
                     vocpath,
                     savedir,
-                    n_topics = 100,
+                    number_of_topics = 100,
                     top_terms_numbers = [10]):
     """
     Discovers topics and evaluates model using topic coherence
     """
     print "Loading corpus"
-    documents = csr_load_from_listdb_file(corpuspath)
+    corpus = csr_load_from_listdb_file(corpuspath)
 
     # LDA model (parameter choice based on )
-    model = LatentDirichletAllocation(n_topics = n_topics,
+    model = LatentDirichletAllocation(n_topics = number_of_topics,
                                       doc_topic_prior = None,
                                       topic_word_prior = None,
                                       learning_method = 'online',
@@ -66,9 +60,9 @@ def discover_topics(corpuspath,
                                       verbose = 0,
                                       random_state = 1)
 
-    print "Discovering topics using LDA with", n_topics, "topics"
+    print "Discovering topics using LDA with", number_of_topics, "topics"
     start_time = time.time()
-    model.fit(documents)
+    model.fit(corpus)
     end_time = time.time()
     total_time = end_time - start_time
               
@@ -76,17 +70,17 @@ def discover_topics(corpuspath,
     topics = array_to_topics(model.components_, vocpath)
 
     corpusname = os.path.splitext(os.path.basename(corpuspath))[0]
-    modelfile = savedir + '/lda' + str(n_topics) + '_' + corpusname + '.models'
+    modelfile = savedir + '/lda' + str(number_of_topics) + '_' + corpusname + '.models'
     print "Saving resulting models to", modelfile
     np.savetxt(modelfile, model.components_)
 
     # save topics with different top terms numbers
     for top in top_terms_numbers:
-        topicfile = savedir + '/lda' + str(n_topics) + '_' + corpusname + '_top' + str(top) + '.topics'
+        topicfile = savedir + '/lda' + str(number_of_topics) + '_' + corpusname + '_top' + str(top) + '.topics'
         print "Saving the top", top, " terms of the topic to", topicfile
         save_topics(topicfile, topics, top = top)
 
-    timefile = savedir + '/lda' + str(n_topics) + '_' + corpusname + '.time'
+    timefile = savedir + '/lda' + str(number_of_topics) + '_' + corpusname + '.time'
     print "Saving times to", timefile
     save_time(timefile, total_time)
 
@@ -102,7 +96,7 @@ def main():
                             help="Vocabulary file for corpus")
         parser.add_argument("dir",  nargs=1, type=str,
                             help="Directory where the models, topics and times are to be saved")
-        parser.add_argument("-n", "--n_topics", type=int, default=100,
+        parser.add_argument("-n", "--number_of_topics", type=int, default=100,
                             help="Number of topics")
         parser.add_argument("-t", "--top", type=int, default=[5, 10, 15, 20], nargs='*',
                             help="Configuration number to try")
@@ -110,7 +104,7 @@ def main():
         discover_topics(args.corpus[0],
                         args.vocabulary[0],
                         args.dir[0],
-                        n_topics = args.n_topics,
+                        number_of_topics = args.number_of_topics,
                         top_terms_numbers = args.top)
         
     except SystemExit:

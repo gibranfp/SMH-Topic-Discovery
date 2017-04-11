@@ -1,9 +1,9 @@
-}#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8
 #
 # Gibran Fuentes-Pineda <gibranfp@unam.mx>
 # IIMAS, UNAM
-# 2016
+# 2017
 #
 # -------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
@@ -25,6 +25,7 @@ document per line
 """
 import argparse
 import codecs
+import os
 from collections import Counter
 from tokenizer import line2tokens
 
@@ -36,8 +37,10 @@ def wiki2ref(wiki2text, dirpath):
     title_mark = '= '
     section_mark = '=='
 
-    refpath = dirpath + '/enwiki.ref.txt'
-    titlespath = dirpath + '/enwiki.titles.txt'
+    basename = os.path.basename(wiki2text).rstrip('.txt')
+
+    refpath = dirpath + '/' + basename + '.ref'
+    titlespath = dirpath + '/' + basename + '.titles'
 
     fref = codecs.open(refpath, 'w', 'utf-8') 
     ftitles = codecs.open(titlespath, 'w', 'utf-8')

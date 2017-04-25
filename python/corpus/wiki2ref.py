@@ -36,7 +36,6 @@ def wiki2ref(wiki2text, dirpath):
     """
     title_mark = '= '
     section_mark = '=='
-
     basename = os.path.basename(wiki2text).rstrip('.txt')
 
     refpath = dirpath + '/' + basename + '.ref'
@@ -51,11 +50,10 @@ def wiki2ref(wiki2text, dirpath):
             ftitles.write(title + '\n')
             if i > 0:
                 fref.write('\n')
-        else:
-            tokens = line2tokens(line.replace('=', ''))
+        elif line[:2] != section_mark:
+            tokens = line2tokens(line)
             fref.write(' '.join(tokens))
-            if line[:2] == section_mark:
-                fref.write(' ')
+            fref.write(' ')
     fref.close()
     ftitles.close()
                                         

@@ -63,7 +63,7 @@ class SMHClassifier(BaseEstimator):
         Discovers topics and used them as a dictionary for sparse-coding.
         """
         models = self.smh_.fit(X, weights, expand)
-        self.coder = SparseCoder(dictionary = normalize(models.toarray()),
+        self.coder_ = SparseCoder(dictionary = normalize(models.toarray()),
                                  transform_algorithm = 'lasso_lars',
                                  split_sign = True,
                                  n_jobs = 4)
@@ -74,7 +74,7 @@ class SMHClassifier(BaseEstimator):
         the documents.
         """
         self.fit(X, weights = weights, expand = expand)
-        return self.coder.fit_transform(X.todense())
+        return self.coder_.fit_transform(X.toarray())
 
     
     def transform(self, X):
@@ -82,4 +82,4 @@ class SMHClassifier(BaseEstimator):
         Sparse-code a given set of documents from the
         discovered topics.
         """
-        return self.coder.transform(X.todense())
+        return self.coder_.transform(X.toarray())

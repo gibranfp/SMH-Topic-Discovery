@@ -48,13 +48,25 @@ def main():
 
         # vectorizes corpus and creates LDA model
         vectorizer = CountVectorizer(stop_words = 'english')
+
+        # LDA model (parameter choice based on )
         lda = LatentDirichletAllocation(n_topics = args.number_of_topics,
-                                        max_iter = 5,
+                                        doc_topic_prior = None,
+                                        topic_word_prior = None,
                                         learning_method = 'online',
-                                        batch_size = 4096,
                                         learning_decay = 0.5,
                                         learning_offset = 64,
+                                        max_iter = 5,
+                                        batch_size = 4096,
+                                        evaluate_every = -1,
+                                        total_samples = 1e6,
+                                        perp_tol = 1e-1,
+                                        mean_change_tol = 1e-3,
+                                        max_doc_update_iter = 100,
+                                        n_jobs = 1,
+                                        verbose = 0,
                                         random_state = 1)
+            
         title = "Online LDA (" + str(args.number_of_topics) + " topics)"
         # computes document classification accuracies
         accuracy = evaluate_vocabulary_sizes(vectorizer, lda, title, args.sizes)

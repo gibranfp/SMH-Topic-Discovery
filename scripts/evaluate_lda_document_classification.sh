@@ -11,5 +11,3 @@ do
            --number_of_topics $SIZE\
            --path_to_save experiments/document_classification/lda/lda$SIZE.txt &
 done
-            
-            

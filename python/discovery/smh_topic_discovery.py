@@ -26,12 +26,11 @@ import argparse
 import sys
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.cluster import MiniBatchKMeans, KMeans, SpectralClustering
-from smh import smh
+from smh import listdb_load, Weights, SMHDiscoverer, rng_init
 from math import log
 import time
 import os
-from topics import load_vocabulary, 
+from topics import load_vocabulary, save_topics, save_time, listdb_to_topics
 
 class SMHTopicDiscovery(BaseEstimator):
     """
@@ -39,44 +38,43 @@ class SMHTopicDiscovery(BaseEstimator):
     """
     def __init__(self,
                  tuple_size = 3,
-                 number_of_tuples = 255,
-                 table_size = 2**19,
-                 cooccurrence_threshold = None, 
+                 number_of_tuples = None,
+                 table_size = 2**20,
+                 cooccurrence_threshold = 0.14, 
                  min_set_size = 3,
-                 cluster_number_of_tuples = 255,
                  cluster_tuple_size = 3,
+                 cluster_number_of_tuples = 255,
                  cluster_table_size = 2**20,
                  overlap = 0.7,
                  min_cluster_size = 3):
 
         self.tuple_size_ = tuple_size
 
-        if cooccurrence_threshold:
-            self.cooccurrence_threshold = cooccurrence_threshold
-            self.number_of_tuples = log(0.5) / log(1.0 - pow(cooccurrence_threshold, tuple_size))
+        if number_of_tuples:
+            self.cooccurrence_threshold_ = pow(1. -  pow(0.5, 1. / float(number_of_tuples)), 1. / float(tuple_size))
+            self.number_of_tuples_ = number_of_tuples
         else:
-            self.number_of_tuples = number_of_tuples
+            self.cooccurrence_threshold_ = cooccurrence_threshold
+            self.number_of_tuples_ = int(log(0.5) / log(1.0 - pow(cooccurrence_threshold, tuple_size)))
 
         self.table_size_ = table_size
         self.min_set_size_ = min_set_size
-        self.cluster_number_of_tuples_ = cluster_number_of_tuples
         self.cluster_tuple_size_ = cluster_tuple_size
+        self.cluster_number_of_tuples_ = cluster_number_of_tuples
         self.cluster_table_size_ = cluster_table_size
         self.overlap_ = overlap
         self.min_cluster_size_ = min_cluster_size
-
-        clustering_option = {
-            'minibatch' : MiniBatchKMeans(n_clusters = number_of_clusters),
-            'kmeans' : KMeans(n_clusters = number_of_clusters,),
-            'spectral' : MiniBatchKMeans(n_clusters = number_of_clusters)
-        }
+        self.discoverer_ = SMHDiscoverer(tuple_size = self.tuple_size_,
+                                         number_of_tuples = self.number_of_tuples_,
+                                         table_size = self.table_size_,
+                                         cooccurrence_threshold = self.cooccurrence_threshold_, 
+                                         min_set_size = self.min_set_size_,
+                                         cluster_tuple_size = self.cluster_tuple_size_,
+                                         cluster_number_of_tuples = self.cluster_number_of_tuples_,
+                                         cluster_table_size = self.cluster_table_size_,
+                                         overlap = self.overlap_,
+                                         min_cluster_size = self.min_cluster_size_)
         
-        if self.clustering != 'mhlink':
-            self.algorithm = clustering_option.get(self.clustering, None)
-            if not self.algorithm:
-                print clustering, "is not a valid clustering algorithm. Using MinibatchKmeans."
-                self.algorithm = clustering_option['minibatch']
-
     def fit(self,
             X,
             weights = None,
@@ -84,58 +82,69 @@ class SMHTopicDiscovery(BaseEstimator):
         """
         Discovers topics from a text corpus.
         """
-        mined = X.mine(tuple_size = self.tuple_size,
-                       num_tuples = self.n_tuples,
-                       weights = weights,
-                       expand = corpus)
-        mined.cutoff(min = self.min_mined_size)
-
-        if self.clustering == 'mhlink':
-            self.models = mined.cluster_mhlink(thres = self.overlap,
-                                               min_cluster_size = self.min_cluster_size)
-        else:
-            self.models = mined.cluster_sklearn(self.algorithm)
-
+        self.models = self.discoverer_.fit(X,
+                                           weights = weights,
+                                           expand = corpus)
+            
 def discover_topics(ifspath,
                     vocpath,
                     savedir,
                     tuple_size = 3,
-                    wcc = 0.12,
-                    n_tuples = None,
-                    min_mined_size = 5,
-                    overlap = 0.7,
+                    number_of_tuples = None,
+                    table_size = 2**20,
+                    cooccurrence_threshold = 0.14, 
+                    min_set_size = 3,
                     weightspath = None,
                     corpuspath = None,
-                    clustering = 'mhlink',
-                    min_cluster_size = 5,
-                    number_of_clusters = 100,
-                    top_terms_numbers = [10]):
+                    cluster_tuple_size = 3,
+                    cluster_number_of_tuples = 255,
+                    cluster_table_size = 2**20,
+                    overlap = 0.7,
+                    min_cluster_size = 3,
+                    top_terms_numbers = [10],
+                    seed = 12345678):
     """
     Discovers topics and evaluates model using topic coherence
     """
-    print "Loading inverted file from ", ifspath
-    ifs = smh.smh_load(ifspath)
+    rng_init(seed)
+
+    print "Loading inverted file from", ifspath
+    ifs = listdb_load(ifspath)
 
     corpus = None
     if corpuspath:
-        print "Loading corpus from ", corpuspath
-        corpus = smh.smh_load(corpuspath)
+        print "Loading corpus from", corpuspath
+        corpus = listdb_load(corpuspath)
 
     weights = None
     if weightspath:
-        print "Loading weights from ", weightspath
-        weights = smh.Weights(weightspath)
+        print "Loading weights from", weightspath
+        weights = Weights(weightspath)
 
     model = SMHTopicDiscovery(tuple_size = tuple_size,
-                              n_tuples = n_tuples,
-                              wcc = wcc,
-                              min_mined_size = min_mined_size,
+                              number_of_tuples = number_of_tuples,
+                              table_size = table_size,
+                              cooccurrence_threshold = cooccurrence_threshold, 
+                              min_set_size = min_set_size,
+                              cluster_tuple_size = cluster_tuple_size,
+                              cluster_number_of_tuples = cluster_number_of_tuples,
+                              cluster_table_size = cluster_table_size,
                               overlap = overlap,
-                              min_cluster_size = min_cluster_size,
-                              clustering = clustering,
-                              number_of_clusters = number_of_clusters)
+                              min_cluster_size = min_cluster_size)
 
-    print "Discovering topics with smh (", clustering, ")"
+    print "Parameters set to "    
+    print "   tuple_size =", tuple_size
+    print "   number_of_tuples = ", number_of_tuples
+    print "   table_size = ", table_size
+    print "   cooccurrence_threshold = ", cooccurrence_threshold
+    print "   min_set_size = ", min_set_size
+    print "   cluster_tuple_size = ", cluster_tuple_size
+    print "   cluster_number_of_tuples = ", cluster_number_of_tuples
+    print "   cluster_table_size = ", cluster_table_size
+    print "   overlap = ", overlap
+    print "   min_cluster_size = ", min_cluster_size
+
+    print "Discovering topics"    
     start_time = time.time()
     model.fit(ifs, weights = weights, corpus = corpus)
     end_time = time.time()
@@ -145,12 +154,10 @@ def discover_topics(ifspath,
     topics = listdb_to_topics(model.models, vocpath)
 
     corpusname = os.path.splitext(os.path.basename(ifspath))[0]
-    mine_config = '_r' + str(tuple_size) + '_l' +  str(model.n_tuples) + '_w' + str(wcc)
-    mine_config = mine_config + '_s' + str(min_mined_size)
-    if clustering == 'mhlink':
-        cluster_config = '_mhlink_o' + str(overlap) + '_m' +  str(min_cluster_size)
-    else:
-        cluster_config = '_' + clustering + '_k' + str(number_of_clusters)
+    mine_config = '_r' + str(tuple_size) + '_l' +  str(model.number_of_tuples_)\
+                  + '_w' + str(cooccurrence_threshold)
+    mine_config = mine_config + '_s' + str(min_set_size)
+    cluster_config = '_o' + str(overlap) + '_m' +  str(min_cluster_size)
         
     modelfile = savedir + '/smh' + mine_config + cluster_config + corpusname + '.models'
     print "Saving resulting models to", modelfile
@@ -160,12 +167,14 @@ def discover_topics(ifspath,
     for top in top_terms_numbers:
         if top:
             top_str = '_top' + str(top)
+            topics_to_save = [t for t in topics if len(t) >= top]
         else:
             top_str = '_full'
-           
+            topics_to_save = topics
+
         topicfile = savedir + '/smh' + mine_config + cluster_config + corpusname + top_str + '.topics'
         print "Saving the terms of the topic to", topicfile
-        save_topics(topicfile, topics, top = top)
+        save_topics(topicfile, topics_to_save , top = top)
 
     timefile = savedir + '/smh' + mine_config + cluster_config + corpusname + '.time'
     print "Saving times to", timefile
@@ -182,28 +191,35 @@ def main():
                             help="Vocabulary file for corpus")
         parser.add_argument("dir", type=str,
                             help="Directory where the models, topics and times are to be saved")
-        parser.add_argument("--corpus", type=str, default=None,
-                            help="Corpus file (database of ID lists)")
-        parser.add_argument("--clustering", type=str, default='mhlink',
-                            help="Clustering algorithm to use")
-        parser.add_argument("--overlap", type=float, default=0.7,
-                            help="Overlap threshold for MHLink")
-        parser.add_argument("--min_mined_size", type=int, default=4,
-                            help="Minimum size of mined co-occurring term lists")
-        parser.add_argument("--min_cluster_size", type=int, default=5,
-                            help="Minimum size of clusters")
-        parser.add_argument("--n_tuples", type=int, default=None,
-                            help="Number of tuples")
-        parser.add_argument("--number_of_clusters", type=int, default=100,
-                            help="Number of clusters when clustering algorithm is not MHLink")
-        parser.add_argument("--top", type=int, default=[5, 10, 15, 20, None], nargs='*',
-                            help="Configuration number to try")
         parser.add_argument("--tuple_size", type=int, default=3,
                             help="Size of tuples")
-        parser.add_argument("--wcc", type=float, default=0.12,
+        parser.add_argument("--number_of_tuples", type=int, default=None,
+                            help="Number of tuples")
+        parser.add_argument("--table_size", type=int, default=2**20,
+                            help="Size of hash tables")
+        parser.add_argument("--cooccurrence_threshold", type=float, default=0.14,
                             help="Weighted co-occurrence coefficient threshold")
+        parser.add_argument("--min_set_size", type=int, default=3,
+                           help="Minimum size of mined co-occurring term lists")
         parser.add_argument("--weights", type=str, default = None,
                             help="Weights file (list of document weights)")
+        parser.add_argument("--corpus", type=str, default=None,
+                            help="Corpus file (database of ID lists)")
+        parser.add_argument("--cluster_tuple_size", type=int, default=3,
+                            help="Size of tuples")
+        parser.add_argument("--cluster_number_of_tuples", type=int, default=255,
+                            help="Number of tuples")
+        parser.add_argument("--cluster_table_size", type=int, default=2**20,
+                            help="Size of hash tables")
+        parser.add_argument("--overlap", type=float, default=0.7,
+                            help="Overlap threshold for MHLink")
+        parser.add_argument("--min_cluster_size", type=int, default=5,
+                            help="Minimum size of clusters")
+        parser.add_argument("--top", type=int, default=[5, 10, 15, 20, None], nargs='*',
+                            help="Configuration number to try")
+        parser.add_argument("--seed", type=int, default=12345678,
+                            help="Seed for random number generator")
+
 
         args = parser.parse_args()
         
@@ -211,16 +227,19 @@ def main():
                         args.vocabulary,
                         args.dir,
                         tuple_size = args.tuple_size,
-                        wcc = args.wcc,
-                        n_tuples = args.n_tuples,
-                        min_mined_size = args.min_mined_size,
-                        overlap = args.overlap,
+                        number_of_tuples = args.number_of_tuples,
+                        table_size = args.table_size,
+                        cooccurrence_threshold = args.cooccurrence_threshold,
+                        min_set_size = args.min_set_size,
                         weightspath = args.weights,
                         corpuspath = args.corpus,
-                        clustering = args.clustering,
+                        cluster_tuple_size = args.cluster_tuple_size,
+                        cluster_number_of_tuples = args.cluster_number_of_tuples,
+                        cluster_table_size = args.cluster_table_size,
+                        overlap = args.overlap,
                         min_cluster_size = args.min_cluster_size,
-                        number_of_clusters = args.number_of_clusters,
-                        top_terms_numbers = args.top)
+                        top_terms_numbers = args.top,
+                        seed = args.seed)
         
     except SystemExit:
         print "for help use --help"

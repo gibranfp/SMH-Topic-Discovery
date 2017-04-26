@@ -78,12 +78,12 @@ def ref_vocabulary(wikiref, stopwords):
 
     return vocabulary
 
-def ref2corpus(refpath, swpath, dirpath, cutoff = 10000):
+def ref2corpus(refpath, swpath, dirpath, cutoff = 10000, min_doc_terms = 1):
     """
     Reads reference file produced by wiki2ref, reuters2ref or 20newsgroups2ref
     and generates a corpus file
     """
-    basename = os.path.basename(refpath).rstrip('.ref.txt')
+    basename = os.path.basename(refpath).rstrip('.ref')
     corpuspath = dirpath + '/' + basename + str(cutoff) + '.corpus'
     vocpath = dirpath + '/' + basename + str(cutoff) + '.vocab'
     
@@ -99,11 +99,14 @@ def ref2corpus(refpath, swpath, dirpath, cutoff = 10000):
             ids = Counter([vocabulary[t][0] for t in term_re.findall(line)
                            if t not in stopwords
                            and vocabulary[t][0] < cutoff])
-            bow = [i for i in ids.items()]
-            f.write(str(len(bow)) + ' ')
-            document = [str(t[0]) + ':' + str(t[1]) for t in bow]
-            f.write(' '.join(document))
-            f.write('\n')
+            if sum(ids.itervalues()) >= min_doc_terms:
+                bow = [i for i in sorted(ids.items())]
+                f.write(str(len(bow)) + ' ')
+                document = [str(t[0]) + ':' + str(t[1]) for t in bow]
+                f.write(' '.join(document))
+                f.write('\n')
+            else:
+                f.write('0\n')
     
 def main():
     parser = argparse.ArgumentParser("Generates a corpus from a reference file")
@@ -115,12 +118,15 @@ def main():
                         help = "Directory where to save corpus and vocabulary")
     parser.add_argument("-c", "--cutoff", type = int, default = 10000,
                         help = "Vocabulary size")
+    parser.add_argument("-m", "--min_doc_terms", type = int, default = 100,
+                        help = "Minimum number of terms in a document to be considered")
     args = parser.parse_args()
     
     ref2corpus(args.ref,
                args.stopwords,
                args.dirpath,
-               cutoff = args.cutoff)
+               cutoff = args.cutoff,
+               min_doc_terms = args.min_doc_terms)
     
 if __name__ == "__main__":
     main()

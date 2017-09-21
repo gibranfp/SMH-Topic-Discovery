@@ -29,8 +29,9 @@ from sklearn.decomposition import SparseCoder
 from smh import array_to_listdb
 from smh import SMHDiscoverer
 from scipy.sparse.csr import csr_matrix
-from numpy import ndarray
 from math import log, pow
+import numpy as np
+import smh_api as sa
 
 class SMHClassifier(BaseEstimator):
     """
@@ -46,35 +47,58 @@ class SMHClassifier(BaseEstimator):
                  cluster_tuple_size = 3,
                  cluster_table_size = 2**20,
                  overlap = 0.7,
-                 min_cluster_size = 3):
-        self.smh_ = SMHDiscoverer(tuple_size = tuple_size,
-                                  number_of_tuples = number_of_tuples,
-                                  table_size = table_size,
-                                  cooccurrence_threshold = cooccurrence_threshold, 
-                                  min_set_size = min_set_size,
-                                  cluster_number_of_tuples = cluster_number_of_tuples,
-                                  cluster_tuple_size = cluster_tuple_size,
-                                  cluster_table_size = cluster_table_size,
-                                  overlap = overlap,
-                                  min_cluster_size = min_cluster_size)
-
-    def fit(self, X, weights = True, expand = True):
+                 min_cluster_size = 3,
+                 number_of_topics = 100):
+        self.discoverer_ = SMHDiscoverer(tuple_size = tuple_size,
+                                         number_of_tuples = number_of_tuples,
+                                         table_size = table_size,
+                                         cooccurrence_threshold = cooccurrence_threshold, 
+                                         min_set_size = min_set_size,
+                                         cluster_number_of_tuples = cluster_number_of_tuples,
+                                         cluster_tuple_size = cluster_tuple_size,
+                                         cluster_table_size = cluster_table_size,
+                                         overlap = overlap,
+                                         min_cluster_size = min_cluster_size)
+        self.number_of_topics = number_of_topics
+        
+    def fit(self, X, weights = False, expand = True):
         """
         Discovers topics and used them as a dictionary for sparse-coding.
         """
-        models = self.smh_.fit(X, weights, expand)
-        self.coder = SparseCoder(dictionary = normalize(models.toarray()),
-                                 transform_algorithm = 'lasso_lars',
-                                 split_sign = True,
-                                 n_jobs = 4)
+        ifs = array_to_listdb(X.T)
+        if expand:
+            corpus = ifs.invert()
+        else:
+            corpus = None
+
+        self.models = self.discoverer_.fit(ifs, expand = corpus)
+        # codebook = self.models.toarray()
+        # codebook = np.zeros((self.models.size(), self.models.dim()))
+        # topic_scores = []
+        # if self.number_of_topics:
+        #     for i,m in enumerate(self.models.ldb):
+        #         for j,t in enumerate(m):
+        #             idf = log(float(corpus.size()) / listdb.ldb[t.item].size)
+        #             codebook[i,j] = (0.5 *  (t.freq / m[0].freq) + 0.5) * idf
+        #         topic_scores.append(codebook[i,:].mean())
+        #     topic_indices = np.argsort(topic_scores)[::-1]
+        #     codebook = codebook[topic_indices, :]
+        #     codebook = codebook[:self.number_of_topics,:]
+
+        # self.coder = SparseCoder(dictionary = codebook,
+        #                          transform_algorithm = 'lasso_lars',
+        #                          transform_alpha = 0.001,
+        #                          split_sign = True,
+        #                          n_jobs = 4)
         
-    def fit_transform(self, X, weights = None, expand = None):
+    def fit_transform(self, X, weights = None, expand = True):
         """
         Discovers topics and used them as a dictionary to sparse-code
         the documents.
         """
         self.fit(X, weights = weights, expand = expand)
-        return self.coder.fit_transform(X.todense())
+        return self.transform(X)
+        # return self.coder.fit_transform(X.todense())
 
     
     def transform(self, X):
@@ -82,4 +106,11 @@ class SMHClassifier(BaseEstimator):
         Sparse-code a given set of documents from the
         discovered topics.
         """
-        return self.coder.transform(X.todense())
+        X_transformed = np.zeros((X.shape[0], self.models.size()))
+        listdb = array_to_listdb(X)
+        for i,d in enumerate(listdb.ldb):
+            for j,m in enumerate(self.models.ldb):
+                X_transformed[i,j] = sa.list_jaccard(m,d)
+
+        print X_transformed
+        # return self.coder.transform(X.todense())

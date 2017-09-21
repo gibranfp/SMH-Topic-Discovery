@@ -65,6 +65,7 @@ class SMHClassifier(BaseEstimator):
         """
         Discovers topics and used them as a dictionary for sparse-coding.
         """
+<<<<<<< HEAD
         ifs = array_to_listdb(X.T)
         if expand:
             corpus = ifs.invert()
@@ -90,6 +91,13 @@ class SMHClassifier(BaseEstimator):
         #                          transform_alpha = 0.001,
         #                          split_sign = True,
         #                          n_jobs = 4)
+=======
+        models = self.smh_.fit(X, weights, expand)
+        self.coder_ = SparseCoder(dictionary = normalize(models.toarray()),
+                                 transform_algorithm = 'lasso_lars',
+                                 split_sign = True,
+                                 n_jobs = 4)
+>>>>>>> bdeb95e068a7735d500bed1ffa37c8e6df67dbce
         
     def fit_transform(self, X, weights = None, expand = True):
         """
@@ -97,8 +105,12 @@ class SMHClassifier(BaseEstimator):
         the documents.
         """
         self.fit(X, weights = weights, expand = expand)
+<<<<<<< HEAD
         return self.transform(X)
         # return self.coder.fit_transform(X.todense())
+=======
+        return self.coder_.fit_transform(X.toarray())
+>>>>>>> bdeb95e068a7735d500bed1ffa37c8e6df67dbce
 
     
     def transform(self, X):
@@ -106,6 +118,7 @@ class SMHClassifier(BaseEstimator):
         Sparse-code a given set of documents from the
         discovered topics.
         """
+<<<<<<< HEAD
         X_transformed = np.zeros((X.shape[0], self.models.size()))
         listdb = array_to_listdb(X)
         for i,d in enumerate(listdb.ldb):
@@ -114,3 +127,6 @@ class SMHClassifier(BaseEstimator):
 
         print X_transformed
         # return self.coder.transform(X.todense())
+=======
+        return self.coder_.transform(X.toarray())
+>>>>>>> bdeb95e068a7735d500bed1ffa37c8e6df67dbce

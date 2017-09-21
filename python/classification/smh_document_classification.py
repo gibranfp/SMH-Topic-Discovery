@@ -3,7 +3,7 @@
 #
 # Gibran Fuentes-Pineda <gibranfp@unam.mx>
 # IIMAS, UNAM
-# 2016
+# 2017
 #
 # -------------------------------------------------------------------------
 # This program is free software: you can redistribute it and/or modify
@@ -26,10 +26,10 @@ SMH topics.
 import argparse
 import sys
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from smh_classifier import SMHClassifier
 from smh import rng_init
-from document_classification import kfold_cv, evaluate_model, evaluate_vocabulary_sizes
+from cross_validation import evaluate_vocabulary_sizes
 
 def main():
     try:
@@ -99,3 +99,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    

@@ -20,34 +20,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------
 """
-Performs document classification from document representations created
-from Online LDA and SMH topics.
+Generates cross-validation partitions to evaluate LDA / SMH in document classification.
 """
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.decomposition import NMF, LatentDirichletAllocation
 from sklearn.svm import LinearSVC
 from sklearn.datasets import fetch_20newsgroups
+from sklearn.metrics import f1_score
 
-def kfold_cv(data, target, k = 10):
+def kfold_cv(X, y, k = 10):
     """
     Generator for k-fold cross-validation from a given text data and target.
     Used to evaluate topic discovery methods and SVM classifier.
     """
-    db_size = len(data)
-    fold_size = int(db_size / 10)
+    fold_size = int(X.shape[0] / 10)
     for i in range(k):
-        complete_set = range(db_size)
-        valid_set = complete_set[fold_size * i:fold_size * (i + 1)]
-        train_set = [d for d in complete_set if d not in valid_set]
+        valid_mask = np.zeros(X.shape[0], dtype=bool)
+        valid_mask[fold_size * i:fold_size * (i + 1)] = True
+
+        train_mask = np.logical_not(valid_mask)
         
-        data_train = [data[d] for d in train_set]
-        target_train = [target[d] for d in train_set]
+        X_train = X[train_mask, :]
+        y_train = y[train_mask]
+        
+        X_valid = X[valid_mask, :]
+        y_valid = y[valid_mask]
 
-        data_valid = [data[d] for d in valid_set]
-        target_valid = [target[d] for d in valid_set]
-
-        yield i, data_train, target_train, data_valid, target_valid
+        yield i, X_train, y_train, X_valid, y_valid
 
 def evaluate_model(model, vectorizer, data, target, k = 10):
     """
@@ -56,18 +54,14 @@ def evaluate_model(model, vectorizer, data, target, k = 10):
     the train documents and then all documents are represented using
     the discovered topics. This representation is used to train and
     validate a linear svm classifier.
-     """
+    """
     accuracy = np.zeros(k)
     for i, data_train, target_train, data_valid, target_valid in kfold_cv(data, target, k = 10):
         X_train = vectorizer.fit_transform(data_train)
         X_valid = vectorizer.transform(data_valid)
-        print "Train size =", X_train.shape
-        print "Valid size =", X_valid.shape
         
         topic_rep_train = model.fit_transform(X_train)
         topic_rep_valid = model.transform(X_valid)
-        print "Train representation size =", topic_rep_train.shape
-        print "Valid representation size =", topic_rep_valid.shape
 
         lsvc = LinearSVC( C = 1.0, 
                           class_weight = None, 
@@ -91,10 +85,14 @@ def evaluate_model(model, vectorizer, data, target, k = 10):
         
     return accuracy.mean()
 
-def evaluate_vocabulary_sizes(vectorizer, 
-                              model, 
-                              name, 
-                              vocabulary_sizes):
+def evaluate_vocabulary_sizes(vectorizer, model, name, vocabulary_sizes):
+    """
+    Evaluates a topic discovery method in document classification
+    with different vocabulary sizes and using k-fold cross-validation. 
+    Topics are first discovered from the train documents and then all documents 
+    are represented using the discovered topics. This representation is used to train and
+    validate a linear svm classifier.
+    """
     print "Loading dataset"
     dataset = fetch_20newsgroups(subset = 'all', 
                                  remove = ('headers', 'footers', 'quotes'))
@@ -104,9 +102,6 @@ def evaluate_vocabulary_sizes(vectorizer,
     for i,nf in enumerate(vocabulary_sizes):
         print "Vocabulary size = ", nf
         vectorizer.set_params(max_features = nf)
-        accuracy[i] = evaluate_model(model, 
-                                     vectorizer, 
-                                     dataset.data, 
-                                     dataset.target)
+        accuracy[i] = evaluate_model(model, vectorizer, dataset.data, dataset.target)
         
     return accuracy

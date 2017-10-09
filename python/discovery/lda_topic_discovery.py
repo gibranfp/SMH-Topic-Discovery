@@ -93,20 +93,20 @@ def main():
         parser = argparse.ArgumentParser(
         description="Evaluates Online LDA in topic discovery")
         parser.set_defaults(fig=False)
-        parser.add_argument("corpus", nargs=1, type=str,
+        parser.add_argument("corpus", type=str,
                             help="Corpus file (database of ID lists)")
-        parser.add_argument("vocabulary", nargs=1, type=str,
+        parser.add_argument("vocabulary", type=str,
                             help="Vocabulary file for corpus")
-        parser.add_argument("dir",  nargs=1, type=str,
+        parser.add_argument("dir", type=str,
                             help="Directory where the models, topics and times are to be saved")
         parser.add_argument("-n", "--number_of_topics", type=int, default=100,
                             help="Number of topics")
         parser.add_argument("-t", "--top", type=int, default=[5, 10, 15, 20], nargs='*',
                             help="Configuration number to try")
         args = parser.parse_args()
-        discover_topics(args.corpus[0],
-                        args.vocabulary[0],
-                        args.dir[0],
+        discover_topics(args.corpus,
+                        args.vocabulary,
+                        args.dir,
                         number_of_topics = args.number_of_topics,
                         top_terms_numbers = args.top)
         

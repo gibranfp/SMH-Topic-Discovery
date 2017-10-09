@@ -57,6 +57,7 @@ def read_coherence_from_file(filepath):
                 elif line[0] == 'Median':
                     median = float(line[4])
                 else:
+
                     coherences.append(float(line[0]))
 
     return coherences, average, median

@@ -38,8 +38,7 @@ def newsgroups2ref(dirpath):
     """
     print "Downloading data"
     newsgroups_dataset = fetch_20newsgroups(subset = 'all',
-                                            remove = ('headers','footers', 'quotes'),
-                                            random_state = 123)
+                                            remove = ('headers','footers', 'quotes'))
 
     refpath = dirpath + "/20newsgroups.ref"
     labelspath = dirpath + "/20newsgroups.labels"

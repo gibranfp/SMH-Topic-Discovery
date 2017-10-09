@@ -59,9 +59,9 @@ def discover_topics(corpuspath,
                                       perp_tol = 1e-1,
                                       mean_change_tol = 1e-3,
                                       max_doc_update_iter = 100,
-                                      n_jobs = 1,
+                                      n_jobs = -1,
                                       verbose = 0,
-                                      random_state = 1)
+                                      random_state = 12345678)
 
     print "Discovering topics using LDA with", number_of_topics, "topics"
     start_time = time.time()

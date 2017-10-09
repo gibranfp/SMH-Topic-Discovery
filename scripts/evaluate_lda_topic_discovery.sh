@@ -1,22 +1,15 @@
 #!/bin/bash
 #
-# Script to evaluate LDA topics on document classification.
+# Script to evaluate LDA topics on topic discovery.
 #
-mkdir -p experiments/topic_discovery/lda/
+mkdir -p $1
 
-# On Reuters corpus
-FILES=`ls data/reuters/*.corpus`
-## With 100, 200, 300 and 400 topics
-for SIZE in {100..100..100}
+for K in 200 400
 do
-    for F in $FILES
-    do
-        filename=$(basename $F)
-        filename="${filename%.*}"
-        python python/discovery/lda_topic_discovery.py \
-            --number_of_topics $SIZE \
-            $F \
-            $(dirname $F)/$filename.vocab \
-            experiments/topic_discovery/lda/ 
-    done
+    echo "Discovering $K topics using LDA"
+    python python/discovery/lda_topic_discovery.py \
+        --number_of_topics K \
+        data/reuters/min_docterms0/reuters100000.corpus \
+        data/reuters/min_docterms0/reuters100000.vocab \
+        $1
 done

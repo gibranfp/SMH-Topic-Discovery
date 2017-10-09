@@ -39,8 +39,11 @@ def discover_topics(corpuspath,
     """
     Discovers topics and evaluates model using topic coherence
     """
-    print "Loading corpus"
+    print "Loading corpus from",corpuspath
     corpus = csr_load_from_listdb_file(corpuspath)
+
+    print "Loading vocabulary from", vocpath
+    vocabulary, docfreq = load_vocabulary(vocpath)
 
     # LDA model (parameter choice based on )
     model = LatentDirichletAllocation(n_topics = number_of_topics,
@@ -66,8 +69,8 @@ def discover_topics(corpuspath,
     end_time = time.time()
     total_time = end_time - start_time
               
-    print "Generating topics (lists of terms) from models"
-    topics = array_to_topics(model.components_, vocpath)
+    print "Generating topics (lists of terms) from models (vocabulary file:", vocpath, ")"
+    topics = array_to_topics(model.components_, vocabulary)
 
     corpusname = os.path.splitext(os.path.basename(corpuspath))[0]
     modelfile = savedir + '/lda' + str(number_of_topics) + '_' + corpusname + '.models'

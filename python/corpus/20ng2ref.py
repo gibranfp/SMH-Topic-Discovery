@@ -37,9 +37,9 @@ def newsgroups2ref(dirpath):
     a database of lists and saves it to file.
     """
     print "Downloading data"
-    newsgroups_dataset = fetch_20newsgroups(subset='all',
-                                            remove=('headers','footers', 'quotes'),
-                                            random_state=123)
+    newsgroups_dataset = fetch_20newsgroups(subset = 'all',
+                                            remove = ('headers','footers', 'quotes'),
+                                            random_state = 123)
 
     refpath = dirpath + "/20newsgroups.ref"
     labelspath = dirpath + "/20newsgroups.labels"

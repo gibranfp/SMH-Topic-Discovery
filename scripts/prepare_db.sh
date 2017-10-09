@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Script to download and preprocess the NIPS, 20 Newsgroups, Reuters and
+# Script to download and preprocess the Reuters and
 # Wikipedia corpora
 #
 ROOTPATH=`pwd`
@@ -9,30 +9,20 @@ DATAPATH=$ROOTPATH/data
 mkdir -p $DATAPATH
 WIKIDUMPEN="http://dumps.wikimedia.org/enwiki/20161101/enwiki-20161101-pages-articles.xml.bz2"
 
-NIPS=false
 REUTERS=false
-TWENTYNG=false
 WIKIPEDIA=false
-while getopts ":abcnrtwe" opt; do
+while getopts ":abrw" opt; do
     case $opt in
         a)
-            NIPS=true
             REUTERS=true
-            TWENTYNG=true
             WIKIPEDIA=true
             WIKI2TEXT=true
             ;;
         b)
             WIKI2TEXT=true
             ;;
-        n)
-            NIPS=true
-        ;;
         r)
             REUTERS=true
-        ;;
-        t)
-            TWENTYNG=true
         ;;
         w)
             WIKIPEDIA=true
@@ -50,38 +40,32 @@ if [ ! -f $DATAPATH/stopwords_english.txt ]; then
          https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
 fi
 
-if $NIPS; then
-    echo "Preparing NIPS corpus"
-    mkdir -p $DATAPATH
-    echo "Downloading NIPS corpus"
-    wget -qO- -O $DATAPATH/tmp.zip \
-         http://arbylon.net/projects/nips/nips-20110223.zip
-    unzip $DATAPATH/tmp.zip -d $DATAPATH/
-    rm $DATAPATH/tmp.zip
-    echo "Done processing NIPS corpus"
-fi
-
 if $REUTERS; then
     echo "Preparing Reuters"
     mkdir -p $DATAPATH/reuters
     echo -n "Enter path of Reuters dataset: "
     read REUTERSPATH
 
-    echo "Preprocessing and generating vectors"
-    python python/reuters/reuters2corpus.py \
-           $REUTERSPATH \
-           $DATAPATH/stopwords_english.txt \
-           $DATAPATH/reuters
-    echo "Done processing Reuters corpus"
-fi
+    echo "Genereting reference text from Reuters directory $REUTERSPATH"
+    python $ROOTPATH/python/corpus/reuters2ref.py \
+	     $REUTERSPATH \
+	     $DATAPATH/reuters/
 
-if $TWENTYNG; then
-    echo "Preparing 20 newsgroups corpus"
-    mkdir -p $DATAPATH/20newsgroups
-    python python/20newsgroups/20ng2corpus.py \
-           $DATAPATH/stopwords_english.txt \
-           $DATAPATH/20newsgroups
-    echo "Done processing 20 newsgroups corpus"
+    for VOCSIZE in 20000 40000 60000 80000 100000
+    do
+        echo "Genereting BOWs (vocabulary size = $VOCSIZE) from Reuters reference"
+        python $ROOTPATH/python/corpus/ref2corpus.py \
+	         $DATAPATH/reuters/reuters.ref \
+	         $DATAPATH/stopwords_english.txt \
+	         $DATAPATH/reuters/ \
+	         -c $VOCSIZE
+
+        echo "Genereting inverted file from corpus"
+        smhcmd ifindex $DATAPATH/reuters/reuters$VOCSIZE.corpus $DATAPATH/reuters/reuters$VOCSIZE.ifs
+        smhcmd weights -w ids $DATAPATH/reuters/reuters$VOCSIZE.corpus $DATAPATH/reuters/reuters$VOCSIZE.ifs $DATAPATH/reuters/reuters$VOCSIZE.weights
+    done
+    
+    echo "Done processing Reuters corpus"
 fi
 
 if $WIKI2TEXT; then
@@ -136,6 +120,6 @@ if $WIKIPEDIA; then
 
     echo "Genereting inverted file from corpus"
     smhcmd ifindex $DATAPATH/wikipedia/enwiki.corpus $DATAPATH/wikipedia/enwiki.ifs
-
+    smhcmd weights -w ids $DATAPATH/wikipedia/enwiki.corpus $DATAPATH/wikipedia/enwiki.ifs $DATAPATH/wikipedia/enwiki.weights
     echo "Done processing Wikipedia corpus"
 fi

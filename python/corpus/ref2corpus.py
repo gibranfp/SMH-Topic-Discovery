@@ -28,6 +28,7 @@ import re
 import codecs
 import os
 from collections import Counter
+from string import digits
 
 term_re = re.compile("\w+", re.UNICODE)
 
@@ -63,6 +64,7 @@ def ref_vocabulary(wikiref, stopwords):
     corpus_freq = Counter()
     doc_freq = Counter()
     for line in codecs.open(wikiref, encoding = "utf-8"):
+        line = re.sub(r'\d+', '', line)
         terms = [t for t in term_re.findall(line)
                  if t not in stopwords]
         
@@ -96,6 +98,7 @@ def ref2corpus(refpath, swpath, dirpath, cutoff = 10000, min_doc_terms = 1):
 
         print "Computing document vectors and saving them to", corpuspath
         for line in codecs.open(refpath, encoding = "utf-8"):
+            line = re.sub(r'\d+', '', line)
             ids = Counter([vocabulary[t][0] for t in term_re.findall(line)
                            if t not in stopwords
                            and vocabulary[t][0] < cutoff])

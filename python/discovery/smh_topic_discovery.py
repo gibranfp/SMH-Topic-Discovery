@@ -30,7 +30,7 @@ from smh import listdb_load, Weights, SMHDiscoverer, rng_init
 from math import log
 import time
 import os
-from topics import load_vocabulary, save_topics, save_time, listdb_to_topics
+from topics import load_vocabulary, save_topics, save_time, sort_terms, sort_topics, listdb_to_topics
 
 class SMHTopicDiscovery(BaseEstimator):
     """
@@ -111,6 +111,9 @@ def discover_topics(ifspath,
     print "Loading inverted file from", ifspath
     ifs = listdb_load(ifspath)
 
+    print "Loading vocabulary from", vocpath
+    vocabulary, docfreq = load_vocabulary(vocpath)
+    
     corpus = None
     if corpuspath:
         print "Loading corpus from", corpuspath
@@ -149,32 +152,35 @@ def discover_topics(ifspath,
     model.fit(ifs, weights = weights, corpus = corpus)
     end_time = time.time()
     total_time = end_time - start_time
-              
-    print "Generating topics (lists of terms) from models"
-    topics = listdb_to_topics(model.models, vocpath)
 
     corpusname = os.path.splitext(os.path.basename(ifspath))[0]
     mine_config = '_r' + str(tuple_size) + '_l' +  str(model.number_of_tuples_)\
                   + '_w' + str(cooccurrence_threshold)
     mine_config = mine_config + '_s' + str(min_set_size)
     cluster_config = '_o' + str(overlap) + '_m' +  str(min_cluster_size)
-        
+
     modelfile = savedir + '/smh' + mine_config + cluster_config + corpusname + '.models'
     print "Saving resulting models to", modelfile
     model.models.save(modelfile)
 
-    # save topics with different top terms numbers
+    # sort models and save them with different top terms numbers
+    topicfile = savedir + '/smh' + mine_config + cluster_config + corpusname + '_unsorted.topics'
+    print "Saving the terms of the topic to", topicfile
+    save_topics(topicfile, listdb_to_topics(model.models, vocabulary) , top = None)
+
+    print "Sorting models"
+    sorted_models, topics = sort_terms(model.models, vocabulary, docfreq)
+    
     for top in top_terms_numbers:
+        sorted_topics = sort_topics(sorted_models, topics, top = top)
         if top:
             top_str = '_top' + str(top)
-            topics_to_save = [t for t in topics if len(t) >= top]
         else:
             top_str = '_full'
-            topics_to_save = topics
 
         topicfile = savedir + '/smh' + mine_config + cluster_config + corpusname + top_str + '.topics'
         print "Saving the terms of the topic to", topicfile
-        save_topics(topicfile, topics_to_save , top = top)
+        save_topics(topicfile, sorted_topics , top = top)
 
     timefile = savedir + '/smh' + mine_config + cluster_config + corpusname + '.time'
     print "Saving times to", timefile
@@ -215,7 +221,7 @@ def main():
                             help="Overlap threshold for MHLink")
         parser.add_argument("--min_cluster_size", type=int, default=5,
                             help="Minimum size of clusters")
-        parser.add_argument("--top", type=int, default=[5, 10, 15, 20, None], nargs='*',
+        parser.add_argument("--top", type=int, default=[10, None], nargs='*',
                             help="Configuration number to try")
         parser.add_argument("--seed", type=int, default=12345678,
                             help="Seed for random number generator")

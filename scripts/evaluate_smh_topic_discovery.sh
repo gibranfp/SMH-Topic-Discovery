@@ -2,12 +2,11 @@
 #
 # Script to evaluate SMH  on topic discovery
 #
-mkdir -p experiments/topic_discovery/smh/
+mkdir -p $1
 
 # On Reuters corpus
-FILES=`ls data/reuters/*.ifs`
-# Cooccurrence thresholds from 0.1 to 0.2
-for THRES in `seq 0.10 0.02 0.20`
+FILES=`ls $2/*$3.ifs`
+for THRES in `seq $4 $5 $6`
 do
     for F in $FILES
     do
@@ -15,11 +14,13 @@ do
         filename=$(basename $F)
         filename="${filename%.*}"
         python python/discovery/smh_topic_discovery.py \
-            --tuple_size 3\
+            --tuple_size $7 \
             --cooccurrence_threshold $THRES \
-            --corpus $filepath.corpus\
+            --corpus $filepath.corpus \
+            --overlap $8 \
+            --min_set_size $9 \
             $F \
-            $(dirname $F)/$filename.vocab \
-            experiments/topic_discovery/smh/ 
+            $filepath.vocab \
+            $1
     done
 done

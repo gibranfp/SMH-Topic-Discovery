@@ -46,7 +46,7 @@ def discover_topics(corpuspath,
     vocabulary, docfreq = load_vocabulary(vocpath)
 
     # LDA model (parameter choice based on )
-    model = LatentDirichletAllocation(n_topics = number_of_topics,
+    model = LatentDirichletAllocation(n_components = number_of_topics,
                                       doc_topic_prior = None,
                                       topic_word_prior = None,
                                       learning_method = 'online',
@@ -59,7 +59,7 @@ def discover_topics(corpuspath,
                                       perp_tol = 1e-1,
                                       mean_change_tol = 1e-3,
                                       max_doc_update_iter = 100,
-                                      n_jobs = -1,
+                                      n_jobs = 1,
                                       verbose = 0,
                                       random_state = 12345678)
 

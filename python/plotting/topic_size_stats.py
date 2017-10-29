@@ -40,7 +40,7 @@ def get_topic_size_stats(filename):
             words = l.split()
             topics.append(words)
 
-    sizes = np.sort([len(t) for t in topics])
+    sizes = np.sort([len(t) for t in topics if len(t) >= 10])
 
     print "Min Size =", np.min(sizes)
     print "Max Size =", np.max(sizes)

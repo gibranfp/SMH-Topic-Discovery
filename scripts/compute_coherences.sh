@@ -4,7 +4,7 @@ FILES=`find $1 -name "*_top10.topics"`
 cat $FILES > $1/all_top10_topics.txt
 
 # echo "Computing word occurrence..."
-python ../topic_interpretability/ComputeWordCount.py $1/all_top10_topics.topics data/ref > $1/all_top10_topics_wordcounts.txt
+python ../topic_interpretability/ComputeWordCount.py $1/all_top10_topics.txt data/ref > $1/all_top10_topics_wordcounts.txt
 
 for F in $FILES
 do

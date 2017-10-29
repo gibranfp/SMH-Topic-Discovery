@@ -96,7 +96,7 @@ def read_config_file(filepath):
 
     return paths, labels
 
-def plot_coherences(paths, xlabel, labels, rotation, show_flag, path_to_save):
+def plot_coherences(paths, xlabel, labels, rotation, show_flag, path_to_save, tight = False):
     """
     Creates a boxplot of coherences
     """
@@ -113,11 +113,14 @@ def plot_coherences(paths, xlabel, labels, rotation, show_flag, path_to_save):
     fig = plt.figure(1, figsize=(9, 6))
     ax = fig.add_subplot(111)
     bp = ax.boxplot(coherences, showmeans=True, meanline=True)
-   
+
     ax.set_xticklabels(labels, rotation=rotation)
     plt.ylabel("NPMI")
     plt.xlabel(xlabel)
 
+    if tight:
+        plt.subplots_adjust(bottom=0.25)
+        
     if show_flag:
         plt.show()
 
@@ -138,7 +141,9 @@ def main():
         parser.add_argument('-c', '--config_file', action='store_true', help="Reads topic files and labels to plot from a file")
         parser.add_argument('-s', '--show_flag', action='store_true',
                             help="show figure")
-        parser.set_defaults(fig=False)
+        parser.add_argument('-t', '--tight', action='store_true',
+                            help="Tight")
+
         parser.add_argument("-p", "--path_to_save", type=str, default=None,
                             help="file where to save the figure")
         parser.add_argument('files', nargs='+')
@@ -150,7 +155,7 @@ def main():
             filepaths = args.files
             labels = args.labels.split()
 
-        plot_coherences(filepaths, args.xlabel, labels, args.rotation, args.show_flag, args.path_to_save)
+        plot_coherences(filepaths, args.xlabel, labels, args.rotation, args.show_flag, args.path_to_save, args.tight)
         
     except SystemExit:
         print "for help use --help"

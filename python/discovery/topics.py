@@ -68,7 +68,7 @@ def sort_terms(models, vocabulary, docfreq):
     sorted_models = []
     for m in models.ldb:
         sm = [(docfreq[t.item], t.item) for t in m]
-        sorted(sm, key = lambda tup: tup[0], reverse = True)
+        sm = sorted(sm, key = lambda tup: tup[0], reverse = True)
         sorted_models.append(sm)
         sorted_topics.append([vocabulary[t[1]] for t in sm])
         

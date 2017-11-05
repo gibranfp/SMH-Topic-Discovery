@@ -30,7 +30,7 @@ from smh import listdb_load, Weights, SMHDiscoverer, rng_init
 from math import log
 import time
 import os
-from topics import load_vocabulary, save_topics, save_time, sort_terms, sort_topics, listdb_to_topics
+from topics import load_vocabulary, save_topics, save_time, get_models_docfreq, sort_topics, listdb_to_topics
 
 class SMHTopicDiscovery(BaseEstimator):
     """
@@ -168,11 +168,12 @@ def discover_topics(ifspath,
     print "Saving the terms of the topic to", topicfile
     save_topics(topicfile, listdb_to_topics(model.models, vocabulary) , top = None)
 
-    print "Sorting models"
-    sorted_models, topics = sort_terms(model.models, vocabulary, docfreq)
-    
+    print "Getting the document frequencies of the models"
+    models_docfreq, topics = get_models_docfreq(model.models, vocabulary, docfreq)
+
+    print "Sorting topics"
     for top in top_terms_numbers:
-        sorted_topics = sort_topics(sorted_models, topics, top = top)
+        sorted_topics = sort_topics(models_docfreq, topics, top = top)
         if top:
             top_str = '_top' + str(top)
         else:

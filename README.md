@@ -1,8 +1,8 @@
-B1;4205;0c# Topic discovery with Sampled Min-Hashing
+# Topic discovery with Sampled Min-Hashing
 
 ## Installation
 
-Install dependencies (use ~sudo~ for system-wide installation):
+Install dependencies (use `sudo` for system-wide installation):
 
 ~~~~	
 pip install sklearn nltk
@@ -20,7 +20,15 @@ Install Sampled-MinHashing (see README at https://github.com/gibranfp/Sampled-Mi
 It will download the followind resources/corpora using 'scripts/prepare\_db.sh':
 
 * NIPS
-* 20NewsGruop
-* Wikipedia
+* 20 Newsgroups
+* English Wikipedia
 
 If you have access to a copy of Reuters copora it will prompt you with this option, otherwise ignore it.
+
+## Running experiments
+
+To run the experiments, from the main directory:
+~~~~
+bash scripts/prepare_db.sh -a
+
+~~~~

@@ -7,13 +7,17 @@ ROOTPATH=`pwd`
 THIRDPARTYPATH=$ROOTPATH/3rdParty
 DATAPATH=$ROOTPATH/data
 mkdir -p $DATAPATH
-WIKIDUMPEN="http://dumps.wikimedia.org/enwiki/20161101/enwiki-20161101-pages-articles.xml.bz2"
+WIKIDUMPEN="https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2"
 
+NIPS=false
+TWENTYNG=false
 REUTERS=false
 WIKIPEDIA=false
 while getopts ":abrw" opt; do
     case $opt in
         a)
+            NIPS=true
+            TWENTYNG=true
             REUTERS=true
             WIKIPEDIA=true
             WIKI2TEXT=true
@@ -21,9 +25,15 @@ while getopts ":abrw" opt; do
         b)
             WIKI2TEXT=true
             ;;
+        n)
+            NIPS=true
+            ;;
+        t)
+            TWENTYNG=true
+            ;;
         r)
             REUTERS=true
-        ;;
+            ;;
         w)
             WIKIPEDIA=true
         ;;
@@ -38,6 +48,37 @@ if [ ! -f $DATAPATH/stopwords_english.txt ]; then
     echo "Downloading stopwords"
     wget -qO- -O $DATAPATH/stopwords_english.txt \
          https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
+fi
+
+if $NIPS; then
+        echo "Downloading NIPS corpus"
+        wget -qO- -O $DATAPATH/tmp.zip \
+            http://arbylon.net/projects/nips/nips-20110223.zip
+        unzip $DATAPATH/tmp.zip -d $DATAPATH/
+        rm $DATAPATH/tmp.zip
+
+        echo "Genereting inverted file from corpus"
+        smhcmd ifindex $DATAPATH/knowceans-ilda/nips/nips.corpus $DATAPATH/knowceans-ilda/nips/nips.ifs
+        
+        echo "Done processing NIPS corpus"
+fi
+
+if $TWENTYNG; then
+    mkdir -p $DATAPATH/20newsgroups
+
+    echo "Generating 20 newsgroups reference text"
+    python python/corpus/20ng2ref.py $DATAPATH/20newsgroups
+
+    echo "Generating BOWs from 20 newsgroups reference text"
+    python python/corpus/ref2corpus.py $DATAPATH/20newsgroups/20newsgroups.ref \
+        $DATAPATH/stopwords_english.txt \
+        $DATAPATH/20newsgroups/ \
+        -c 40000
+    
+    echo "Genereting inverted file from corpus"
+    smhcmd ifindex $DATAPATH/20newsgroups/20newsgroups40000.corpus $DATAPATH/20newsgroups/20newsgroups40000.ifs
+    
+    echo "Done processing 20 newsgroups corpus"
 fi
 
 if $REUTERS; then
@@ -62,7 +103,6 @@ if $REUTERS; then
 
         echo "Genereting inverted file from corpus"
         smhcmd ifindex $DATAPATH/reuters/reuters$VOCSIZE.corpus $DATAPATH/reuters/reuters$VOCSIZE.ifs
-        smhcmd weights -w ids $DATAPATH/reuters/reuters$VOCSIZE.corpus $DATAPATH/reuters/reuters$VOCSIZE.ifs $DATAPATH/reuters/reuters$VOCSIZE.weights
     done
     
     echo "Done processing Reuters corpus"
@@ -110,7 +150,7 @@ if $WIKIPEDIA; then
     python $ROOTPATH/python/corpus/wiki2ref.py \
 	   $DATAPATH/wikipedia/enwiki.txt \
 	   $DATAPATH/wikipedia/
-
+    
     echo "Genereting BOWs from wikipedia reference"
     python $ROOTPATH/python/corpus/ref2corpus.py \
 	   $DATAPATH/wikipedia/enwiki.ref \
@@ -120,6 +160,10 @@ if $WIKIPEDIA; then
 
     echo "Genereting inverted file from corpus"
     smhcmd ifindex $DATAPATH/wikipedia/enwiki.corpus $DATAPATH/wikipedia/enwiki.ifs
-    smhcmd weights -w ids $DATAPATH/wikipedia/enwiki.corpus $DATAPATH/wikipedia/enwiki.ifs $DATAPATH/wikipedia/enwiki.weights
+
+    echo "Using Wikipedia as reference for computing NPMI scores"
+    mkdir -p $DATAPATH/ref
+    cp $DATAPATH/wikipedia/enwiki.ref $DATAPATH/ref/
+    
     echo "Done processing Wikipedia corpus"
 fi

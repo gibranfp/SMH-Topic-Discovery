@@ -24,6 +24,7 @@ Functions to load and save models (lists of IDs) as topics (lists of terms)
 """
 import numpy as np
 import codecs
+from math import log
 
 def load_vocabulary(vocpath):
     """
@@ -60,19 +61,18 @@ def save_time(filepath, total_time):
     with codecs.open(filepath, 'w', 'utf-8') as f:
         f.write(str(total_time))
 
-def sort_terms(models, vocabulary, docfreq):
+def get_models_docfreq(models, vocabulary, docfreq):
     """
-    Loads models from a database of lists, sorts them and saves them as lists of terms
+    Loads models from a database of lists, finds the document frequencies of their terms and saves them as lists of terms
     """
-    sorted_topics = []
-    sorted_models = []
+    topics = []
+    models_docfreq = []
     for m in models.ldb:
-        sm = [(docfreq[t.item], t.item) for t in m]
-        sm = sorted(sm, key = lambda tup: tup[0], reverse = True)
-        sorted_models.append(sm)
-        sorted_topics.append([vocabulary[t[1]] for t in sm])
+        mdf = [(docfreq[t.item], t.item) for t in m]
+        models_docfreq.append(mdf)
+        topics.append([vocabulary[t[1]] for t in mdf])
         
-    return sorted_models, sorted_topics
+    return models_docfreq, topics
 
 def sort_topics(models, topics, top = 10):
     """

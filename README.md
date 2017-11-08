@@ -30,5 +30,5 @@ It will download the followind resources/corpora using 'scripts/prepare\_db.sh':
 To run the experiments, from the main directory:
 ~~~~
 bash scripts/prepare_db.sh -a
-
+bash scripts/run_all.sh
 ~~~~

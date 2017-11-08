@@ -22,8 +22,8 @@ It will download the followind resources/corpora using 'scripts/prepare\_db.sh':
 * NIPS
 * 20 Newsgroups
 * English Wikipedia
-
-If you have access to a copy of Reuters copora it will prompt you with this option, otherwise ignore it.
+* Spanish Wikipedia
+* If you have access to a copy of the Reuters corpus, the script will prompt you to add the path to it.
 
 ## Running experiments
 

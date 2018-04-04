@@ -1,4 +1,4 @@
-FILES=`find $1 -name "*_top10.topics"`
+FILES=`find $1 -name "*_top10*.topics"`
 
 # echo "Concatenating all top 10 topics in $1"/
 cat $FILES > $1/all_top10_topics.txt

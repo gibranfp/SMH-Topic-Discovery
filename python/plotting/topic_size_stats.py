@@ -28,7 +28,7 @@ import sys
 import numpy as np
 import codecs
 
-def get_topic_size_stats(filename):
+def get_topic_size_stats(filename, min_size = 10, top = 400):
     """
     Reads a topic file and outputs the topic size mean, median, min, max, variance
     and standard deviation 
@@ -40,8 +40,8 @@ def get_topic_size_stats(filename):
             words = l.split()
             topics.append(words)
 
-    sizes = np.sort([len(t) for t in topics if len(t) >= 10])
-
+    sizes = [len(t) for t in topics if len(t) >= min_size]
+    sizes = np.sort(sizes[:top])
     print "Min Size =", np.min(sizes)
     print "Max Size =", np.max(sizes)
     print "Average Size =", np.mean(sizes)
@@ -55,9 +55,11 @@ def main():
         parser = argparse.ArgumentParser(
            description="Outputs topic size statistics from a topic file")
         parser.add_argument('topic_file', type=str)
+        parser.add_argument('--min_size', type=int, default=10)
+        parser.add_argument('--top', type=int, default=400)
         
         args = parser.parse_args()
-        get_topic_size_stats(args.topic_file)
+        get_topic_size_stats(args.topic_file, args.min_size, args.top)
         
     except SystemExit:
         print "for help use --help"

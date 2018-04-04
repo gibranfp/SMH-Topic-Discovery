@@ -14,6 +14,6 @@ do
     for K in 200 400 600
     do
         echo "Getting top $K topics from $F to $1/topK/$filename.k$K.topics"
-        head -n $K $F > $1/topK/$filename.k$K.topics
+        head -n $K $F > $dirpath/topK/$filename.k$K.topics
     done
 done

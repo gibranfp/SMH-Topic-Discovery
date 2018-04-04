@@ -49,8 +49,8 @@ def plot_tuple_collision(tuple_size = [(1, 'crimson'), (2, 'lightblue'), (3, 'go
     for r in tuple_size:
         plt.plot(jcc, jcc**r[0], c = r[1], label = "r = " + str(r[0]))
 
-    plt.xlabel("$JCC_B(B_1, B_2, \ldots, B_k)$")
-    plt.ylabel("$P(g(B_1) = g(B_2) = \cdots = g(B_k))$")
+    plt.xlabel("$JCC_B(B^{(1)}, \ldots, B^{(k)})$")
+    plt.ylabel("$P(g(B^{(1)}) = \cdots = g(B^{(k)}))$")
     plt.grid()
     plt.legend()
     plt.savefig('mh_tuple_collision.pdf')
@@ -69,8 +69,8 @@ def plot_unit_filter(jcc_thres = [(0.2, '-'), (0.6, '--')], \
             plt.plot(jcc, collision_probability(jcc, r[0], l), c = r[1], ls = j[1], \
                      label = "r = " + str(r[0]) + ", l = " + str(l))
 
-    plt.xlabel("$JCC_B(B_1, B_2 \ldots, B_k)$")
-    plt.ylabel("$P_{collision}(B_1, B_2, \ldots, B_k)$")
+    plt.xlabel("$JCC_B(B^{(1)}, \ldots, B^{(k)})$")
+    plt.ylabel("$P_{collision}(B^{(1)}, \ldots, B^{(k)})$")
     plt.grid()
     plt.legend()
     plt.savefig('mh_unit_filter.pdf')

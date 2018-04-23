@@ -20,7 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------
 """
-Creates boxplot from the coherences of a list of topic files.
+Creates boxplot from the NPMI scores of a list of topic files discovered from 20 Newsgroups and Reuters
+using SMH and Online LDA.
 """
 import argparse
 import sys
@@ -31,26 +32,23 @@ import matplotlib.pyplot as plt
 import re
 from coherence_utils import *
 
-def plot_coherences(paths, xlabel, labels, rotation, show_flag, path_to_save, tight = False):
+def plot_comparison(paths, xlabel, labels, rotation, show_flag, path_to_save, tight = False):
     """
-    Creates a boxplot of coherences
+    Creates a boxplot of coherences for SMH and Online LDA
     """
-    if len(paths) != len(labels):
-        print "Number of labels doesn't match number of files"
-        sys.exit(2)
-
     print "Ploting coherences for the following files:"
     for l,p in zip(labels, paths):
         print "Label:", l, p
 
     coherences = read_multiple_coherence_files(paths)
-    
-    fig = plt.figure(1, figsize=(9, 6))
-    ax = fig.add_subplot(111)
-    bp = ax.boxplot(coherences, showmeans=True, meanline=True)
-
-    ax.set_xticklabels(labels, rotation=rotation)
-    plt.ylabel("NPMI")
+    f, axarr = plt.subplots(2, sharex=True, figsize=(15,20))
+    plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)   
+    f.subplots_adjust(hspace = 0)
+    axarr[0].boxplot(coherences[0:6], showmeans=True, meanline=True)
+    axarr[0].set_ylabel('20 Newsgroups NPMI')
+    axarr[1].boxplot(coherences[6:12], showmeans=True, meanline=True)
+    axarr[1].set_ylabel('Reuters NPMI')
+    axarr[1].set_xticklabels(labels, rotation=rotation)
     plt.xlabel(xlabel)
 
     if tight:
@@ -90,7 +88,7 @@ def main():
             filepaths = args.files
             labels = args.labels.split()
 
-        plot_coherences(filepaths, args.xlabel, labels, args.rotation, args.show_flag, args.path_to_save, args.tight)
+        plot_comparison(filepaths, args.xlabel, labels, args.rotation, args.show_flag, args.path_to_save, args.tight)
         
     except SystemExit:
         print "for help use --help"

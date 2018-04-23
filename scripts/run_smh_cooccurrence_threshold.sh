@@ -3,24 +3,12 @@
 # Script to discover topics with SMH using different co-occurrence thresholds (0.04, 0.06, 0.08 and 0.10)
 #
 # It receives directory for SMH experiments as argument
-mkdir -p $1/nips
 mkdir -p $1/20newsgroups
 mkdir -p $1/reuters/cooccurrence_threshold
 mkdir -p $1/wikipedia
 
 for C in 0.04 0.06 0.08 0.10
 do
-    echo "Discovering topics from NIPS with SMH (co-occurrence threshold = $C)"
-    python python/discovery/smh_topic_discovery.py \
-        --tuple_size 2 \
-        --cooccurrence_threshold $C \
-        --corpus data/data/knowceans-ilda/nips/nips.corpus \
-        --overlap 0.90 \
-        --min_set_size 3 \
-        data/data/knowceans-ilda/nips/nips.ifs \
-        data/data/knowceans-ilda/nips/nips.vocab \
-        $1/nips/
-
     echo "Discovering topics from 20 Newsgroups with SMH (co-occurrence threshold = $C)"
     python python/discovery/smh_topic_discovery.py \
         --tuple_size 2 \

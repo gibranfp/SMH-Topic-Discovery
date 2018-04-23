@@ -9,14 +9,12 @@ DATAPATH=$ROOTPATH/data
 mkdir -p $DATAPATH
 WIKIDUMPEN="https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2"
 
-NIPS=false
 TWENTYNG=false
 REUTERS=false
 WIKIPEDIA=false
 while getopts ":abrw" opt; do
     case $opt in
         a)
-            NIPS=true
             TWENTYNG=true
             REUTERS=true
             WIKIPEDIA=true
@@ -24,9 +22,6 @@ while getopts ":abrw" opt; do
             ;;
         b)
             WIKI2TEXT=true
-            ;;
-        n)
-            NIPS=true
             ;;
         t)
             TWENTYNG=true
@@ -48,19 +43,6 @@ if [ ! -f $DATAPATH/stopwords_english.txt ]; then
     echo "Downloading stopwords"
     wget -qO- -O $DATAPATH/stopwords_english.txt \
          https://raw.githubusercontent.com/pan-webis-de/authorid/master/data/stopwords_english.txt
-fi
-
-if $NIPS; then
-        echo "Downloading NIPS corpus"
-        wget -qO- -O $DATAPATH/tmp.zip \
-            http://arbylon.net/projects/nips/nips-20110223.zip
-        unzip $DATAPATH/tmp.zip -d $DATAPATH/
-        rm $DATAPATH/tmp.zip
-
-        echo "Genereting inverted file from corpus"
-        smhcmd ifindex $DATAPATH/knowceans-ilda/nips/nips.corpus $DATAPATH/knowceans-ilda/nips/nips.ifs
-        
-        echo "Done processing NIPS corpus"
 fi
 
 if $TWENTYNG; then

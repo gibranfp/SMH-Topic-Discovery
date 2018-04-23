@@ -3,19 +3,11 @@
 # Script to discover topics with LDA from the NIPS, 20 Newsgroups and Reuters corpora.
 #
 # It receives directory for SMH experiments as argument
-mkdir -p $1/nips
 mkdir -p $1/20newsgroups
 mkdir -p $1/reuters
 
 for K in 200 400
 do
-    echo "Discovering $K topics using LDA"
-    python python/discovery/lda_topic_discovery.py \
-        --number_of_topics K \
-        data/knowceans-ilda/nips/nips.corpus \
-        data/knowceans-ilda/nips/nips.vocab \
-        $1/nips/
-
     echo "Discovering $K topics using LDA"
     python python/discovery/lda_topic_discovery.py \
         --number_of_topics K \

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Script to discover topics with LDA from the NIPS, 20 Newsgroups and Reuters corpora.
+# Script to discover topics with LDA from the 20 Newsgroups and Reuters corpora.
 #
 # It receives directory for SMH experiments as argument
 mkdir -p $1/20newsgroups

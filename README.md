@@ -19,7 +19,6 @@ Install Sampled-MinHashing (see README at https://github.com/gibranfp/Sampled-Mi
 ## Corpora
 It will download the followind resources/corpora using 'scripts/prepare\_db.sh':
 
-* NIPS
 * 20 Newsgroups
 * English Wikipedia
 * Spanish Wikipedia

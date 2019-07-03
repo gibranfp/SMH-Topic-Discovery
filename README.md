@@ -50,7 +50,6 @@ On the other hand, most topics from the Reuters corpus are related to major worl
 |game, season, team, play, score, minnesota, win, move, league, playoff|
 |rfc, crypt, cryptography, hash, snefru, verification, communication, privacy, answers, signature|
 |decision, president, department, justice, attorney, question, official, responsibility, yesterday, conversation|
-
 | Reuters (Top 10 words) |
 |:--------------------:|
 |point, index, market, high, stock, close, end, share, trade, rise|
@@ -58,7 +57,6 @@ On the other hand, most topics from the Reuters corpus are related to major worl
 |play, team, match, game, win, season, cup, couch, final, champion|
 |wrongful, fujisaki, nicole, acquit, ronald, jury, juror, hiroshi, murder, petrocelli|
 |spongiform, encephalopathy, bovine, jakob, creutzfeldt, mad, cow, wasting, cjd, bse|
-
 |Spanish Wikipedia (Top 10 words) |
 |:--------------------:|
 |religion, atheist, religious, atheism, belief, christian, faith, argument, bear, catholic|
@@ -66,7 +64,6 @@ On the other hand, most topics from the Reuters corpus are related to major worl
 |game, season, team, play, score, minnesota, win, move, league, playoff|
 |rfc, crypt, cryptography, hash, snefru, verification, communication, privacy, answers, signature|
 |decision, president, department, justice, attorney, question, official, responsibility, yesterday, conversation|
-
 | English Wikipedia (Top 10 words) |
 |:--------------------:|
 |religion, atheist, religious, atheism, belief, christian, faith, argument, bear, catholic|

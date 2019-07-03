@@ -1,14 +1,13 @@
 # Topic discovery with Sampled Min-Hashing
-
-## Requirements
+## Getting started
+### Requirements
 * Python 2.7
 * scikit-learn
 * NumPy
 * NLTK (with `punkt`, `averaged_perceptron_tagger` and `wordnet`)
 * [Sampled-MinHashing](https://github.com/gibranfp/Sampled-MinHashing)
 
-## Installation
-
+### Installation
 Install dependencies (use `sudo` for system-wide installation):
 
 ~~~~	
@@ -40,10 +39,9 @@ bash scripts/run_all.sh
 ~~~~
 
 ## Sample Topics
-These are some sample topics discovered from20 Newsgroups, Reuters, and English and Spanish Wikipedia (see [](example_topics) directory for complete lists of topics).  Note that in the 20 Newsgroups corpus topics that loosely correspond to the main thematic of the different newsgroups from where the documents were collected, for example topics related to religion, computers, sports, cryptography, politics, space and medicine. 
-On the other hand, most topics from the Reuters corpus are related to major world events, important world news, economy, finance, popular sports and technology. Finally, a wide variety of topics were discovered from both Spanish and English editions of Wikipedia, including demography, history, sports, series, and music.
+These are some sample topics discovered from20 Newsgroups, Reuters, and English and Spanish Wikipedia (see [](example_topics) directory for complete lists of topics). 
 
-| **20 Newsgroups** |
+| 20 Newsgroups** |
 |:--------------------:|
 |religion, atheist, religious, atheism, belief, christian, faith, argument, bear, catholic|
 |os, cpu, pc, memory, windows, microsoft, price, fast, late, manager|

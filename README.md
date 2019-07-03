@@ -43,29 +43,26 @@ bash scripts/run_all.sh
 These are some sample topics discovered from20 Newsgroups, Reuters, and English and Spanish Wikipedia (see [](example_topics) directory for complete lists of topics).  Note that in the 20 Newsgroups corpus topics that loosely correspond to the main thematic of the different newsgroups from where the documents were collected, for example topics related to religion, computers, sports, cryptography, politics, space and medicine. 
 On the other hand, most topics from the Reuters corpus are related to major world events, important world news, economy, finance, popular sports and technology. Finally, a wide variety of topics were discovered from both Spanish and English editions of Wikipedia, including demography, history, sports, series, and music.
 
-| 20 Newsgroups (Top 10 words) |
+| **20 Newsgroups** |
 |:--------------------:|
 |religion, atheist, religious, atheism, belief, christian, faith, argument, bear, catholic|
 |os, cpu, pc, memory, windows, microsoft, price, fast, late, manager|
 |game, season, team, play, score, minnesota, win, move, league, playoff|
 |rfc, crypt, cryptography, hash, snefru, verification, communication, privacy, answers, signature|
 |decision, president, department, justice, attorney, question, official, responsibility, yesterday, conversation|
-| Reuters (Top 10 words) |
-|:--------------------:|
+| **Reuters (Top 10 words)** |
 |point, index, market, high, stock, close, end, share, trade, rise|
 |voter, election, poll, party, opinion, prime, seat, candidate, presidential, hold|
 |play, team, match, game, win, season, cup, couch, final, champion|
 |wrongful, fujisaki, nicole, acquit, ronald, jury, juror, hiroshi, murder, petrocelli|
 |spongiform, encephalopathy, bovine, jakob, creutzfeldt, mad, cow, wasting, cjd, bse|
-|Spanish Wikipedia (Top 10 words) |
-|:--------------------:|
+| **Spanish Wikipedia** |
 |religion, atheist, religious, atheism, belief, christian, faith, argument, bear, catholic|
 |os, cpu, pc, memory, windows, microsoft, price, fast, late, manager|
 |game, season, team, play, score, minnesota, win, move, league, playoff|
 |rfc, crypt, cryptography, hash, snefru, verification, communication, privacy, answers, signature|
 |decision, president, department, justice, attorney, question, official, responsibility, yesterday, conversation|
-| English Wikipedia (Top 10 words) |
-|:--------------------:|
+| **English Wikipedia (Top 10 words)**|
 |religion, atheist, religious, atheism, belief, christian, faith, argument, bear, catholic|
 |os, cpu, pc, memory, windows, microsoft, price, fast, late, manager|
 |game, season, team, play, score, minnesota, win, move, league, playoff|
